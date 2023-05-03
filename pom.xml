@@ -114,6 +114,22 @@
             <artifactId>micronaut-management</artifactId>
         </dependency>
 
+        <!-- JWT -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>9.31</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.70</version>
+        </dependency>
         <!-- Tests -->
         <dependency>
             <groupId>io.micronaut.test</groupId>
@@ -168,7 +184,39 @@
                                 <typeMapping>java.util.Date=java.time.Instant</typeMapping>
                             </typeMappings>
                         </configuration>
-
+                    </execution>
+                    <execution>
+                        <id>satellite-api</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>./api/satellite.yaml</inputSpec>
+                            <apiPackage>org.fiware.gaiax.satellite.api</apiPackage>
+                            <strictSpec>true</strictSpec>
+                            <modelPackage>org.fiware.gaiax.satellite.model</modelPackage>
+                            <generateAliasAsModel>true</generateAliasAsModel>
+                            <generateApiTests>true</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <generatorName>micronaut</generatorName>
+                            <modelNameSuffix>VO</modelNameSuffix>
+                            <output>${project.build.directory}</output>
+                            <configOptions>
+                                <fullJavaUtil>true</fullJavaUtil>
+                                <useOptional>false</useOptional>
+                                <useGenericResponse>true</useGenericResponse>
+                                <useLombokGenerated>true</useLombokGenerated>
+                                <introspected>true</introspected>
+                                <useBeanValidation>false</useBeanValidation>
+                                <supportAsync>false</supportAsync>
+                                <jacksonDatabindNullable>false</jacksonDatabindNullable>
+                                <generateExamples>true</generateExamples>
+                            </configOptions>
+                            <typeMappings>
+                                <typeMapping>java.util.Date=java.time.Instant</typeMapping>
+                            </typeMappings>
+                        </configuration>
                     </execution>
                 </executions>
                 <dependencies>
