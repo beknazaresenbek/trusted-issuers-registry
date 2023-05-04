@@ -8,7 +8,6 @@ micronaut:
       log-level: TRACE
       max-header-size: 12000
   security:
-    authentication-provider-strategy: ALL
     enabled: true
     basic-auth:
       enabled: false
