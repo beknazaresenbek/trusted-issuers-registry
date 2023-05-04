@@ -14,8 +14,5 @@ public class Application {
 		Micronaut.run(Application.class, args);
 	}
 
-	@Bean
-	public PartiesRepo partiesRepo(SatelliteProperties satelliteProperties) {
-		return new InMemoryPartiesRepo(satelliteProperties.getParties());
-	}
+
 }

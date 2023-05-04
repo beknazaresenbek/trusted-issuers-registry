@@ -2,16 +2,22 @@ package org.fiware.gaiax.tir.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.nimbusds.jose.util.X509CertUtils;
 import io.micronaut.context.annotation.Replaces;
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.fiware.gaiax.tir.configuration.SatelliteProperties;
 import org.fiware.gaiax.tir.configuration.TrustedCA;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
+import java.security.MessageDigest;
 import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -35,7 +41,11 @@ public class JWTService {
 		String clientCert = certs.get(0);
 		String caCert = certs.get(2);
 		PublicKey publicKey = getPublicKey(clientCert);
-		JWT.require(Algorithm.RSA256((RSAPublicKey) publicKey)).build().verify(jwtString);
+		try {
+			JWT.require(Algorithm.RSA256((RSAPublicKey) publicKey)).build().verify(jwtString);
+		} catch (JWTVerificationException jwtVerificationException) {
+			throw new IllegalArgumentException("Token not verified.", jwtVerificationException);
+		}
 		satelliteProperties.getTrustedList().stream()
 				.map(TrustedCA::crt)
 				.map(this::getPem)
@@ -58,11 +68,40 @@ public class JWTService {
 		}
 	}
 
-
 	private String getPem(String cert) {
 		return cert.replace("-----BEGIN CERTIFICATE-----", "")
 				.replace("-----END CERTIFICATE-----", "")
 				.replaceAll("\\s", "");
+	}
+
+	public List<X509Certificate> getCertificates(String crt) {
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
+				crt.getBytes());
+		CertificateFactory certificateFactory = null;
+		try {
+			certificateFactory = CertificateFactory.getInstance("X.509");
+			return  (List<X509Certificate>) certificateFactory.generateCertificates(
+					byteArrayInputStream);
+		} catch (CertificateException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+	public static String getThumbprint(X509Certificate cert) throws CertificateEncodingException {
+		MessageDigest sha256 = DigestUtils.getSha256Digest();
+		return DatatypeConverter.printHexBinary(sha256.digest(cert.getEncoded()));
+	}
+	public List<String> getPemChain(String crt) {
+
+		return getCertificates(crt).stream().map(cert -> {
+					try {
+						return cert.getEncoded();
+					} catch (CertificateEncodingException e) {
+						log.info("Was not able to get the encoded cert.");
+						return null;
+					}
+				})
+				.map(certBytes -> Base64.getEncoder().encodeToString(certBytes)).toList();
+
 	}
 
 }

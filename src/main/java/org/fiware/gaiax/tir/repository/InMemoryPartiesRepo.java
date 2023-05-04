@@ -1,19 +1,154 @@
 package org.fiware.gaiax.tir.repository;
 
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.client.HttpClient;
+import io.micronaut.scheduling.annotation.Scheduled;
+import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.fiware.gaiax.satellite.model.TrustedCAVO;
+import org.fiware.gaiax.tir.auth.JWTService;
 import org.fiware.gaiax.tir.configuration.Party;
+import org.fiware.gaiax.tir.configuration.SatelliteProperties;
+import org.fiware.gaiax.tir.configuration.TrustedCA;
+import org.fiware.gaiax.tir.issuers.IssuersProvider;
 
+import javax.xml.bind.DatatypeConverter;
+import java.security.MessageDigest;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+@Slf4j
+@Singleton
 public class InMemoryPartiesRepo implements PartiesRepo {
 
+	private final SatelliteProperties satelliteProperties;
+	private final IssuersProvider issuersProvider;
 	private final List<Party> parties;
+	private final List<TrustedCAVO> trustedCAS;
+	private final HttpClient httpClient;
+	private final JWTService jwtService;
+
+	public InMemoryPartiesRepo(SatelliteProperties satelliteProperties, IssuersProvider issuersProvider,
+			HttpClient httpClient, JWTService jwtService) {
+		this.parties = satelliteProperties.getParties();
+		this.satelliteProperties = satelliteProperties;
+		this.issuersProvider = issuersProvider;
+		this.httpClient = httpClient;
+		this.jwtService = jwtService;
+		this.trustedCAS = new ArrayList<>();
+	}
+
+	private void updateTrustedCAs(List<Party> parties) {
+
+		Map<String, TrustedCAVO> tcaMap = new HashMap<>();
+		parties.stream().forEach(p -> {
+			List<X509Certificate> certs = jwtService.getCertificates(p.crt());
+			if (certs.size() != 3) {
+				// we ignore everything that is not an x5c chain.
+				return;
+			}
+			// it must be the third one.
+			toTrustedCaVO(certs.get(2)).ifPresent(tCA -> tcaMap.put(tCA.getCertificateFingerprint(), tCA));
+		});
+		satelliteProperties.getTrustedList().stream()
+				.forEach(trustedCA -> {
+					toTrustedCaVO(jwtService.getCertificates(trustedCA.crt()).get(0)).ifPresent(
+							tCA -> tcaMap.put(tCA.getCertificateFingerprint(), tCA));
+				});
+		trustedCAS.clear();
+		trustedCAS.addAll(tcaMap.values());
+	}
+
+	private Optional<TrustedCAVO> toTrustedCaVO(X509Certificate caCert) {
+
+		try {
+			String subject = caCert.getSubjectX500Principal().toString();
+			String validity = isValid(caCert);
+			String fingerprint = JWTService.getThumbprint(caCert);
+			return Optional.of(new TrustedCAVO().status("granted").certificateFingerprint(fingerprint)
+					.validity(validity).subject(subject));
+		} catch (CertificateEncodingException e) {
+			log.warn("Was not able to get the fingerprint.");
+		}
+		return Optional.empty();
+	}
+
+	private String isValid(X509Certificate cert) {
+		try {
+			cert.checkValidity();
+			return "valid";
+		} catch (CertificateExpiredException | CertificateNotYetValidException e) {
+			return "invalid";
+		}
+	}
+
+
+
+	@Scheduled(fixedDelay = "15s")
+	public void updateParties() {
+		List<Party> updatedParties = new ArrayList<>();
+		updatedParties.addAll(satelliteProperties.getParties());
+
+		issuersProvider.getAllTrustedIssuers().stream().forEach(ti -> {
+			try {
+				String documentPath = getDIDDocumentPath(ti.getIssuer());
+				HttpResponse<DidDocument> res = httpClient.toBlocking()
+						.exchange(documentPath, DidDocument.class);
+				if (res.status() == HttpStatus.OK) {
+					DidDocument didDocument = res.body();
+					Optional<VerificationMethod> x5uVM = didDocument
+							.getVerificationMethod()
+							.stream()
+							.filter(vm -> vm.getPublicKeyJwk().getX5u() != null).findFirst();
+					String certificateAddress = x5uVM.get().getPublicKeyJwk().getX5u();
+					String cert = httpClient.toBlocking().retrieve(certificateAddress);
+					updatedParties.add(
+							new Party(didDocument.getId(), didDocument.getId(), didDocument.getId(), "active", cert));
+				}
+			} catch (IllegalArgumentException e) {
+				log.warn("Cannot resolve issuer, skip.");
+			}
+		});
+		parties.clear();
+		parties.addAll(updatedParties);
+		updateTrustedCAs(parties);
+	}
+
+	// port not supported yet
+	private String getDIDDocumentPath(String did) {
+		String[] didParts = did.split(":");
+		if (!didParts[1].equals("web")) {
+			throw new IllegalArgumentException("Only did web is supported.");
+		}
+		if (didParts.length == 3) {
+			// standard well-known path
+			return String.format("https://%s/.well-known/did.json", didParts[2]);
+		}
+		String documentPath = "https://" + didParts[2];
+
+		for (int i = 3; i < didParts.length; i++) {
+			documentPath += "/" + didParts[i];
+		}
+		documentPath += "/did.json";
+		return documentPath;
+
+	}
 
 	@Override public List<Party> getParties() {
 		return parties;
+	}
+
+	@Override public List<TrustedCAVO> getTrustedCAs() {
+		return trustedCAS;
 	}
 
 	@Override public Optional<Party> getPartyById(String id) {

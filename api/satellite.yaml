@@ -36,7 +36,22 @@ paths:
       responses:
         '200':
           description: the trusted list
-
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustedListResponse'
+  /parties:
+    get:
+      tags:
+        - Satellite
+      operationId: getParties
+      responses:
+        '200':
+          description: The trusted parties
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartiesResponse'
 components:
   schemas:
     TokenBody:
@@ -74,3 +89,72 @@ components:
         token_type:
           type: string
           default: Bearer
+    TrustedListResponse:
+      type: object
+      properties:
+        trusted_list_token:
+          type: string
+    PartiesResponse:
+      type: object
+      properties:
+        parties_token:
+          type: string
+    PartiesInfo:
+      type: object
+      properties:
+        count:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Party'
+    Party:
+      type: object
+      properties:
+        party_id:
+          type: string
+        party_name:
+          type: string
+        adherence:
+          $ref: '#/components/schemas/Adherence'
+        certificates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Certificate'
+    Adherence:
+      type: object
+      properties:
+        status:
+          type: string
+        start_date:
+          type: string
+        end_date:
+          type: string
+    Certificate:
+      type: object
+      properties:
+        subject_name:
+          type: string
+        certificate_type:
+          type: string
+        enabled_from:
+          type: string
+        x5c:
+          type: string
+        x5t#S256:
+          type: string
+    TrustedList:
+      type: array
+      items:
+        $ref: '#/components/schemas/TrustedCA'
+    TrustedCA:
+      type: object
+      properties:
+        subject:
+          type: string
+        certificate_fingerprint:
+          type: string
+        validity:
+          type: string
+        status:
+          type: string

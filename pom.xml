@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.fiware.gaiax</groupId>
-    <artifactId>trusted-issuer-registry-wrapper</artifactId>
-    <version>0.0.1</version>
 
     <parent>
         <groupId>io.micronaut</groupId>
@@ -12,12 +9,9 @@
         <version>3.7.2</version>
     </parent>
 
-    <developers>
-        <developer>
-            <name>${project.author.name}</name>
-            <email>${project.author.email}</email>
-        </developer>
-    </developers>
+    <groupId>org.fiware.gaiax</groupId>
+    <artifactId>trusted-issuer-registry-wrapper</artifactId>
+    <version>0.0.1</version>
 
     <description>${project.description}</description>
     <url>${project.url}</url>
@@ -28,6 +22,12 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <name>${project.author.name}</name>
+            <email>${project.author.email}</email>
+        </developer>
+    </developers>
 
     <properties>
         <jdk.version>17</jdk.version>
@@ -48,6 +48,9 @@
         <project.vendor>FIWARE Foundation, e.V.</project.vendor>
         <project.contact.domain>fiware.org</project.contact.domain>
         <project.contact.email>tim.smyth@fiware.org</project.contact.email>
+
+
+        <version.io.kokuwa.micronaut.logging>3.0.4</version.io.kokuwa.micronaut.logging>
 
         <!-- docker -->
         <exec.mainClass>org.fiware.gaiax.wrapper.Application</exec.mainClass>
@@ -75,9 +78,27 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>${version.org.mapstruct}</version>
+            <version>
+                ${version.org.mapstruct}</version>
         </dependency>
 
+
+        <!-- NGSI LD Cconnector -->
+        <dependency>
+            <groupId>org.fiware.tmforum</groupId>
+            <artifactId>common</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.fiware.tmforum</groupId>
+            <artifactId>mapping</artifactId>
+            <version>0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
+        </dependency>
         <!-- micronaut -->
         <dependency>
             <groupId>io.micronaut</groupId>
@@ -134,7 +155,76 @@
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-management</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-jackson-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.reactor</groupId>
+            <artifactId>micronaut-reactor</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-jackson-databind</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-http-client</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava2</groupId>
+            <artifactId>rxjava</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
+        <!-- mn copy -->
+        <dependency>
+            <groupId>io.micronaut.cache</groupId>
+            <artifactId>micronaut-cache-caffeine</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.kokuwa.micronaut</groupId>
+            <artifactId>micronaut-logging</artifactId>
+            <version>${version.io.kokuwa.micronaut.logging}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- javax -->
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+        <!-- required for javax.nullable -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>3.0.1u2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
         <!-- JWT -->
         <dependency>
             <groupId>com.auth0</groupId>
@@ -151,6 +241,7 @@
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.70</version>
         </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>io.micronaut.test</groupId>
@@ -459,4 +550,3 @@
         </plugins>
     </build>
 </project>
-
