@@ -2,13 +2,13 @@ micronaut:
   application:
     name: ${project.artifactId}
   server:
-    port: 9090
+    port: 8080
   http:
     services:
       read-timeout: 30s
       ngsi:
         path: ngsi-ld/v1
-        url: http://localhost:1026
+        url: http://gaia-x-orion-ld:1026
         read-timeout: 30
 ---
 loggers:
