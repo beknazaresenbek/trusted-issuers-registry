@@ -495,7 +495,7 @@
                         <image>registry.access.redhat.com/ubi8/openjdk-17:1.13</image>
                     </from>
                     <to>
-                        <image>${image.registry}/${image.repository}/gaiax-registry-mock</image>
+                        <image>${image.registry}/${image.repository}/trusted-issuers-registry-wrapper</image>
                         <tags>
                             <tag>${project.version}</tag>
                         </tags>
