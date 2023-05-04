@@ -27,6 +27,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenResponse'
+  /trusted_list:
+    get:
+      tags:
+        - Satellite
+      operationId: getTrustedList
+      summary: Used to obtain the iSHARE trusted list of certificate authorities.
+      responses:
+        '200':
+          description: the trusted list
+
 components:
   schemas:
     TokenBody:

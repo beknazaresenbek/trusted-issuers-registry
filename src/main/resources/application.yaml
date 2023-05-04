@@ -3,6 +3,20 @@ micronaut:
     name: ${project.artifactId}
   server:
     port: 9090
+
+    netty:
+      log-level: TRACE
+      max-header-size: 12000
+  security:
+    authentication-provider-strategy: ALL
+    enabled: true
+    basic-auth:
+      enabled: false
+    authentication: bearer
+    token:
+      jwt:
+        enabled: true
+
 satellite:
   id: "EU.EORI.FIWARESATELLITE"
   key: |
