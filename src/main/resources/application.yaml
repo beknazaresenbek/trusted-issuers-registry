@@ -3,6 +3,20 @@ micronaut:
     name: ${project.artifactId}
   server:
     port: 9090
+  http:
+    services:
+      read-timeout: 30s
+      ngsi:
+        path: ngsi-ld/v1
+        url: http://localhost:1026
+        read-timeout: 30
+---
+loggers:
+  levels:
+    ROOT: TRACE
+general:
+  contextUrl: "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+##  "https://www.w3.org/2018/credentials/v1", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#", "https://w3id.org/security/suites/jws-2020/v1"
 satellite:
   id: "EU.EORI.FIWARESATELLITE"
   key: |
