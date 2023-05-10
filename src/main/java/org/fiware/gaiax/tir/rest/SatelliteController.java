@@ -1,43 +1,37 @@
 package org.fiware.gaiax.tir.rest;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.impl.JWTParser;
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.auth0.jwt.interfaces.Header;
-import com.auth0.jwt.interfaces.Payload;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.util.X509CertUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.security.annotation.Secured;
+import io.micronaut.security.rules.SecurityRule;
+import io.micronaut.security.utils.SecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiware.gaiax.satellite.api.SatelliteApi;
+import org.fiware.gaiax.satellite.model.AdherenceVO;
+import org.fiware.gaiax.satellite.model.CertificateVO;
+import org.fiware.gaiax.satellite.model.PartiesInfoVO;
+import org.fiware.gaiax.satellite.model.PartiesResponseVO;
+import org.fiware.gaiax.satellite.model.PartyVO;
 import org.fiware.gaiax.satellite.model.TokenResponseVO;
+import org.fiware.gaiax.satellite.model.TrustedListResponseVO;
+import org.fiware.gaiax.tir.auth.JWTService;
 import org.fiware.gaiax.tir.configuration.SatelliteProperties;
-import org.fiware.gaiax.tir.configuration.TrustedCA;
 import org.fiware.gaiax.tir.repository.PartiesRepo;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPrivateKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.text.ParseException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -45,7 +39,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller("${general.basepath:/}")
@@ -57,9 +53,53 @@ public class SatelliteController implements SatelliteApi {
 	private static final String I_SHARE_SCOPE = "iSHARE";
 	private static final String ALLOWED_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
-	private final PartiesRepo partiesRepo;
-	private final SatelliteProperties satelliteProperties;
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+	private final PartiesRepo partiesRepo;
+	private final JWTService jwtService;
+	private final SatelliteProperties satelliteProperties;
+	private final SecurityService securityService;
+
+	@Secured(SecurityRule.IS_AUTHENTICATED)
+	@Override
+	public HttpResponse<PartiesResponseVO> getParties() {
+		List<PartyVO> partyVOS = partiesRepo.getParties().stream().map(p -> {
+
+			// we need only the first one, the client
+			X509Certificate certificate = jwtService.getCertificates(p.crt()).get(0);
+
+			PartyVO partyVO = new PartyVO();
+			partyVO.partyId(p.id())
+					.partyName(p.name());
+			toCertificateVO(certificate).ifPresent(c -> partyVO.certificates(List.of(c)));
+			return partyVO;
+		}).collect(Collectors.toList());
+
+		PartiesInfoVO partiesInfoVO = new PartiesInfoVO().data(partyVOS).count(partyVOS.size());
+
+		return HttpResponse.ok(new PartiesResponseVO().partiesToken(
+				createToken(securityService.getAuthentication().map(Principal::getName),
+						Optional.empty(),
+						Map.of(),
+						Map.of("parties_token", OBJECT_MAPPER.convertValue(partiesInfoVO, Map.class)))));
+	}
+
+	private Optional<CertificateVO> toCertificateVO(X509Certificate certificate) {
+		try {
+
+			return Optional.of(new CertificateVO()
+					.certificateType(certificate.getType())
+					.enabledFrom(certificate.getNotBefore().toString())
+					.subjectName(certificate.getSubjectX500Principal().getName())
+					.x5c(Base64.getEncoder().encodeToString(certificate.getEncoded()))
+					.x5tHashS256(JWTService.getThumbprint(certificate)));
+		} catch (CertificateEncodingException e) {
+			log.warn("Was not able to encode cert.", e);
+			return Optional.empty();
+		}
+	}
+
+	@Secured({ SecurityRule.IS_ANONYMOUS })
 	@Override
 	public HttpResponse<TokenResponseVO> getToken(String grantType, String clientId, String scope,
 			String clientAssertionType, String clientAssertion) {
@@ -70,34 +110,59 @@ public class SatelliteController implements SatelliteApi {
 			throw new IllegalArgumentException(String.format("Scope needs to contain %s.", I_SHARE_SCOPE));
 		}
 		if (!clientAssertionType.equals(ALLOWED_ASSERTION_TYPE)) {
-			throw new IllegalArgumentException(String.format("Assertion type needs to be %s.", ALLOWED_ASSERTION_TYPE));
+			throw new IllegalArgumentException(
+					String.format("Assertion type needs to be %s.", ALLOWED_ASSERTION_TYPE));
 		}
 		if (partiesRepo.getPartyById(clientId).isEmpty()) {
 			throw new IllegalArgumentException(String.format("Unknown client %s", clientId));
 		}
-		validateJWT(clientAssertion);
+		jwtService.validateJWT(clientAssertion);
 		TokenResponseVO tokenResponseVO = new TokenResponseVO()
-				.accessToken(createToken(clientId))
+				.accessToken(createToken(Optional.empty(), Optional.of(clientId), Map.of(), Map.of()))
 				.expiresIn(3600)
 				.scope(I_SHARE_SCOPE).tokenType("Bearer");
 		return HttpResponse.ok(tokenResponseVO);
 	}
 
-	private String createToken(String clientId) {
-		Map<String, Object> header = Map.of("x5c", getPemChain());
+	@Secured(SecurityRule.IS_AUTHENTICATED)
+	@Override
+	public HttpResponse<TrustedListResponseVO> getTrustedList() {
+
+		return HttpResponse.ok(new TrustedListResponseVO().trustedListToken(
+				createToken(securityService.getAuthentication().map(Principal::getName),
+						Optional.empty(),
+						Map.of("trusted_list", partiesRepo.getTrustedCAs()), Map.of())));
+	}
+
+	private String createToken(Optional<String> aud, Optional<String> clientId, Map<String, List<?>>
+			additionalClaims, Map<String, Map> mapClaim) {
+		Map<String, Object> header = Map.of("x5c", jwtService.getPemChain(satelliteProperties.getCertificate()));
 
 		Algorithm signingAlgo = Algorithm.RSA256(
 				(RSAPrivateKey) getPrivateKey(satelliteProperties.getKey()));
-		return JWT.create()
+
+		JWTCreator.Builder jwtBuilder = JWT.create()
 				.withAudience(satelliteProperties.getId())
 				.withIssuer(satelliteProperties.getId())
-				.withClaim("client_id", clientId)
+				.withSubject(satelliteProperties.getId())
 				.withClaim("jti", UUID.randomUUID().toString())
 				.withNotBefore(Clock.systemUTC().instant())
 				.withExpiresAt(Clock.systemUTC().instant().plus(Duration.of(30, ChronoUnit.MINUTES)))
-				.withArrayClaim("scope", new String[]{ I_SHARE_SCOPE })
-				.withHeader(header)
-				.sign(signingAlgo);
+				.withArrayClaim("scope", new String[] { I_SHARE_SCOPE })
+				.withHeader(header);
+		aud.ifPresent(jwtBuilder::withAudience);
+		clientId.ifPresent(ci -> jwtBuilder.withClaim("client_id", ci));
+		if (!additionalClaims.isEmpty()) {
+			additionalClaims.entrySet().forEach(entry ->
+					jwtBuilder.withClaim(entry.getKey(),
+							entry.getValue().stream().map(v -> OBJECT_MAPPER.convertValue(v, Map.class))
+									.collect(Collectors.toList())));
+		}
+		if (!mapClaim.isEmpty()) {
+			mapClaim.entrySet().forEach(entry -> jwtBuilder.withClaim(entry.getKey(), entry.getValue()));
+		}
+
+		return jwtBuilder.sign(signingAlgo);
 
 	}
 
@@ -122,64 +187,4 @@ public class SatelliteController implements SatelliteApi {
 		}
 	}
 
-	private List<String> getPemChain() {
-		X509CertUtils.parse(satelliteProperties.getCertificate());
-		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
-				satelliteProperties.getCertificate().getBytes());
-		CertificateFactory certificateFactory = null;
-		try {
-			certificateFactory = CertificateFactory.getInstance("X.509");
-			List<X509Certificate> x509Certificates = (List<X509Certificate>) certificateFactory.generateCertificates(
-					byteArrayInputStream);
-			return x509Certificates.stream().map(cert -> {
-						try {
-							return cert.getEncoded();
-						} catch (CertificateEncodingException e) {
-							log.info("Was not able to get the encoded cert.");
-							return null;
-						}
-					})
-					.map(certBytes -> Base64.getEncoder().encodeToString(certBytes)).toList();
-		} catch (CertificateException e) {
-			throw new IllegalArgumentException(e);
-		}
-	}
-
-	private void validateJWT(String jwtString) {
-		DecodedJWT decodedJWT = JWT.decode(jwtString);
-		List<String> certs = decodedJWT.getHeaderClaim("x5c").asList(String.class);
-		if (certs.size() != 3) {
-			throw new IllegalArgumentException("Did not receive a full x5c chain.");
-		}
-		String clientCert = certs.get(0);
-		String caCert = certs.get(2);
-		PublicKey publicKey = getPublicKey(clientCert);
-		JWT.require(Algorithm.RSA256((RSAPublicKey) publicKey)).build().verify(jwtString);
-		satelliteProperties.getTrustedList().stream()
-				.map(TrustedCA::crt)
-				.map(this::getPem)
-				.filter(pem -> pem.equals(caCert))
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("The ca is not trusted."));
-
-	}
-
-	public static PublicKey getPublicKey(String pemBlock) {
-
-		byte[] keyBytes = Base64.getDecoder().decode(pemBlock);
-		try {
-			CertificateFactory fact = CertificateFactory.getInstance("X.509");
-			X509Certificate cer = (X509Certificate) fact.generateCertificate(new ByteArrayInputStream(keyBytes));
-			return cer.getPublicKey();
-		} catch (CertificateException e) {
-			log.warn("Was not able to parse the key", e);
-			throw new RuntimeException("Was not able to parse the key.", e);
-		}
-	}
-
-	private String getPem(String cert) {
-		return cert.replace("-----BEGIN CERTIFICATE-----", "")
-				.replace("-----END CERTIFICATE-----", "")
-				.replaceAll("\\s", "");
-	}
 }

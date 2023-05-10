@@ -3,6 +3,17 @@ micronaut:
     name: ${project.artifactId}
   server:
     port: 8080
+    netty:
+      log-level: TRACE
+      max-header-size: 12000
+  security:
+    enabled: true
+    basic-auth:
+      enabled: false
+    authentication: bearer
+    token:
+      jwt:
+        enabled: true
   http:
     services:
       read-timeout: 30s
@@ -11,12 +22,12 @@ micronaut:
         url: http://gaia-x-orion-ld:1026
         read-timeout: 30
 ---
-loggers:
-  levels:
-    ROOT: TRACE
+
 general:
   contextUrl: "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
 ##  "https://www.w3.org/2018/credentials/v1", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#", "https://w3id.org/security/suites/jws-2020/v1"
+
+
 satellite:
   id: "EU.EORI.FIWARESATELLITE"
   key: |
