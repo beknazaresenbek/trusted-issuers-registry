@@ -4,14 +4,15 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.nimbusds.jose.util.X509CertUtils;
-import io.micronaut.context.annotation.Replaces;
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.fiware.gaiax.satellite.model.TrustedCAVO;
+import org.fiware.gaiax.tir.configuration.Party;
 import org.fiware.gaiax.tir.configuration.SatelliteProperties;
 import org.fiware.gaiax.tir.configuration.TrustedCA;
+import org.fiware.gaiax.tir.repository.PartiesRepo;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
@@ -24,12 +25,14 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
 @Singleton
 public class JWTService {
 
+	private final PartiesRepo partiesRepo;
 	private final SatelliteProperties satelliteProperties;
 
 	public DecodedJWT validateJWT(String jwtString) {
@@ -46,12 +49,21 @@ public class JWTService {
 		} catch (JWTVerificationException jwtVerificationException) {
 			throw new IllegalArgumentException("Token not verified.", jwtVerificationException);
 		}
-		satelliteProperties.getTrustedList().stream()
+		Optional<String> optionalTrustedCA = satelliteProperties.getTrustedList().stream()
 				.map(TrustedCA::crt)
 				.map(this::getPem)
-				.filter(pem -> pem.equals(caCert))
-				.findFirst()
-				.orElseThrow(() -> new IllegalArgumentException("The ca is not trusted."));
+				.filter(caCert::equals)
+				.findFirst();
+		if (optionalTrustedCA.isEmpty()) {
+			partiesRepo.getPartyById(decodedJWT.getClaim("iss").asString())
+					.map(Party::crt)
+					.map(JWTService::getPemChain)
+					// get the client cert
+					.map(parsedCerts -> parsedCerts.get(0))
+					.filter(clientCert::equals)
+					.orElseThrow(() -> new IllegalArgumentException("No trusted CA and no trusted party found."));
+		}
+
 		return decodedJWT;
 	}
 
@@ -74,23 +86,25 @@ public class JWTService {
 				.replaceAll("\\s", "");
 	}
 
-	public List<X509Certificate> getCertificates(String crt) {
+	public static List<X509Certificate> getCertificates(String crt) {
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
 				crt.getBytes());
 		CertificateFactory certificateFactory = null;
 		try {
 			certificateFactory = CertificateFactory.getInstance("X.509");
-			return  (List<X509Certificate>) certificateFactory.generateCertificates(
+			return (List<X509Certificate>) certificateFactory.generateCertificates(
 					byteArrayInputStream);
 		} catch (CertificateException e) {
 			throw new IllegalArgumentException(e);
 		}
 	}
+
 	public static String getThumbprint(X509Certificate cert) throws CertificateEncodingException {
 		MessageDigest sha256 = DigestUtils.getSha256Digest();
 		return DatatypeConverter.printHexBinary(sha256.digest(cert.getEncoded()));
 	}
-	public List<String> getPemChain(String crt) {
+
+	public static List<String> getPemChain(String crt) {
 
 		return getCertificates(crt).stream().map(cert -> {
 					try {

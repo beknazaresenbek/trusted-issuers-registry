@@ -44,6 +44,9 @@ paths:
     get:
       tags:
         - Satellite
+      parameters:
+        - $ref: '#/components/parameters/Eori'
+        - $ref: '#/components/parameters/CertificateSubjectName'
       operationId: getParties
       responses:
         '200':
@@ -52,7 +55,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PartiesResponse'
+  /party/{partyId}:
+    get:
+      tags:
+        - Satellite
+      parameters:
+        - $ref: '#/components/parameters/PartyId'
+      operationId: getPartyById
+      responses:
+        '200':
+          description: Get the party with the requested id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartyResponse'
+        '404':
+          description: No such party was found.
 components:
+  parameters:
+    PartyId:
+      name: partyId
+      in: path
+      required: true
+      schema:
+        type: string
+    Eori:
+      name: eori
+      in: query
+      required: false
+      schema:
+        type: string
+    CertificateSubjectName:
+      name: certificate_subject_name
+      in: query
+      required: false
+      schema:
+        type: string
   schemas:
     TokenBody:
       type: object
@@ -99,6 +137,11 @@ components:
       properties:
         parties_token:
           type: string
+    PartyResponse:
+      type: object
+      properties:
+        party_token:
+          type: string
     PartiesInfo:
       type: object
       properties:
@@ -108,6 +151,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Party'
+    PartyInfo:
+      type: object
+      properties:
+        party_info:
+          $ref: '#/components/schemas/Party'
     Party:
       type: object
       properties:
