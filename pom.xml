@@ -300,7 +300,7 @@
                     </execution>
                     <execution>
                         <id>satellite-api</id>
-                        <phase>generate-sources</phase>epo ist eigentlich keine Wrapper funktionalit
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
