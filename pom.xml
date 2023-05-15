@@ -55,7 +55,7 @@
         <!-- docker -->
         <exec.mainClass>org.fiware.gaiax.wrapper.Application</exec.mainClass>
         <image.registry>quay.io</image.registry>
-        <image.repository>pulledtim</image.repository>
+        <image.repository>wi_stefan</image.repository>
 
         <!-- lazy dev -->
         <version.org.mapstruct>1.5.3.Final</version.org.mapstruct>
@@ -90,9 +90,9 @@
             <version>0.1</version>
         </dependency>
         <dependency>
-            <groupId>org.fiware.tmforum</groupId>
-            <artifactId>mapping</artifactId>
-            <version>0.1</version>
+            <groupId>io.github.wistefan</groupId>
+            <artifactId>ngsi-ld-java-mapping</artifactId>
+            <version>0.1.2</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -495,7 +495,7 @@
                         <image>registry.access.redhat.com/ubi8/openjdk-17:1.13</image>
                     </from>
                     <to>
-                        <image>${image.registry}/${image.repository}/trusted-issuers-registry-wrapper</image>
+                        <image>${image.registry}/${image.repository}/${project.artifactId}</image>
                         <tags>
                             <tag>${project.version}</tag>
                         </tags>

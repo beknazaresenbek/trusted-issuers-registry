@@ -11,7 +11,7 @@ public interface PartiesRepo {
 	List<Party> getParties();
 
 	List<TrustedCAVO> getTrustedCAs();
-	
+
 	Optional<Party> getPartyById(String id);
 
 	Optional<Party> getPartyByDID(String did);

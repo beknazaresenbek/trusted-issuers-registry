@@ -11,6 +11,7 @@ import io.micronaut.security.token.jwt.validator.JwtAuthenticationFactory;
 import io.micronaut.security.token.jwt.validator.JwtTokenValidator;
 import io.micronaut.security.token.jwt.validator.JwtValidator;
 import jakarta.inject.Singleton;
+import org.fiware.gaiax.tir.repository.PartiesRepo;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -21,22 +22,25 @@ import java.util.Collection;
 public class IShareJwtValidator extends JwtTokenValidator {
 
 	private final JWTService jwtService;
+	private final PartiesRepo partiesRepo;
 
 	public IShareJwtValidator(
 			Collection<SignatureConfiguration> signatureConfigurations,
 			Collection<EncryptionConfiguration> encryptionConfigurations,
 			Collection<GenericJwtClaimsValidator> genericJwtClaimsValidators,
 			JwtAuthenticationFactory jwtAuthenticationFactory,
-			JWTService jwtService) {
+			JWTService jwtService, PartiesRepo partiesRepo) {
 		super(signatureConfigurations, encryptionConfigurations, genericJwtClaimsValidators, jwtAuthenticationFactory);
 		this.jwtService = jwtService;
+		this.partiesRepo = partiesRepo;
 	}
 
 	public IShareJwtValidator(JwtValidator validator,
 			JwtAuthenticationFactory jwtAuthenticationFactory,
-			JWTService jwtService) {
+			JWTService jwtService, PartiesRepo partiesRepo) {
 		super(validator, jwtAuthenticationFactory);
 		this.jwtService = jwtService;
+		this.partiesRepo = partiesRepo;
 	}
 
 	@Override

@@ -6,24 +6,18 @@ import io.micronaut.http.client.HttpClient;
 import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.fiware.gaiax.satellite.model.TrustedCAVO;
 import org.fiware.gaiax.tir.auth.JWTService;
 import org.fiware.gaiax.tir.configuration.Party;
 import org.fiware.gaiax.tir.configuration.SatelliteProperties;
-import org.fiware.gaiax.tir.configuration.TrustedCA;
 import org.fiware.gaiax.tir.issuers.IssuersProvider;
 
-import javax.xml.bind.DatatypeConverter;
-import java.security.MessageDigest;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -33,39 +27,14 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 	private final SatelliteProperties satelliteProperties;
 	private final IssuersProvider issuersProvider;
 	private final List<Party> parties;
-	private final List<TrustedCAVO> trustedCAS;
 	private final HttpClient httpClient;
-	private final JWTService jwtService;
 
 	public InMemoryPartiesRepo(SatelliteProperties satelliteProperties, IssuersProvider issuersProvider,
-			HttpClient httpClient, JWTService jwtService) {
+			HttpClient httpClient) {
 		this.parties = satelliteProperties.getParties();
 		this.satelliteProperties = satelliteProperties;
 		this.issuersProvider = issuersProvider;
 		this.httpClient = httpClient;
-		this.jwtService = jwtService;
-		this.trustedCAS = new ArrayList<>();
-	}
-
-	private void updateTrustedCAs(List<Party> parties) {
-
-		Map<String, TrustedCAVO> tcaMap = new HashMap<>();
-		parties.stream().forEach(p -> {
-			List<X509Certificate> certs = jwtService.getCertificates(p.crt());
-			if (certs.size() != 3) {
-				// we ignore everything that is not an x5c chain.
-				return;
-			}
-			// it must be the third one.
-			toTrustedCaVO(certs.get(2)).ifPresent(tCA -> tcaMap.put(tCA.getCertificateFingerprint(), tCA));
-		});
-		satelliteProperties.getTrustedList().stream()
-				.forEach(trustedCA -> {
-					toTrustedCaVO(jwtService.getCertificates(trustedCA.crt()).get(0)).ifPresent(
-							tCA -> tcaMap.put(tCA.getCertificateFingerprint(), tCA));
-				});
-		trustedCAS.clear();
-		trustedCAS.addAll(tcaMap.values());
 	}
 
 	private Optional<TrustedCAVO> toTrustedCaVO(X509Certificate caCert) {
@@ -91,8 +60,6 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 		}
 	}
 
-
-
 	@Scheduled(fixedDelay = "15s")
 	public void updateParties() {
 		List<Party> updatedParties = new ArrayList<>();
@@ -115,12 +82,11 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 							new Party(didDocument.getId(), didDocument.getId(), didDocument.getId(), "active", cert));
 				}
 			} catch (IllegalArgumentException e) {
-				log.warn("Cannot resolve issuer, skip.");
+				log.warn("Cannot resolve issuer {}, skip.", ti.getIssuer());
 			}
 		});
 		parties.clear();
 		parties.addAll(updatedParties);
-		updateTrustedCAs(parties);
 	}
 
 	// port not supported yet
@@ -148,7 +114,15 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 	}
 
 	@Override public List<TrustedCAVO> getTrustedCAs() {
-		return trustedCAS;
+		List<TrustedCAVO> trustedCAVOS = new ArrayList<>();
+
+		satelliteProperties.getTrustedList().stream()
+				.forEach(trustedCA -> {
+					toTrustedCaVO(JWTService.getCertificates(trustedCA.crt()).get(0)).ifPresent(
+							tCA -> trustedCAVOS.add(tCA));
+				});
+
+		return trustedCAVOS;
 	}
 
 	@Override public Optional<Party> getPartyById(String id) {

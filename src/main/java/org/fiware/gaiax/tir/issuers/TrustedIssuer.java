@@ -1,11 +1,15 @@
 package org.fiware.gaiax.tir.issuers;
 
-import lombok.*;
+import io.github.wistefan.mapping.annotations.AttributeGetter;
+import io.github.wistefan.mapping.annotations.AttributeSetter;
+import io.github.wistefan.mapping.annotations.AttributeType;
+import io.github.wistefan.mapping.annotations.MappingEnabled;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.fiware.tmforum.common.domain.EntityWithId;
-import org.fiware.tmforum.mapping.annotations.AttributeGetter;
-import org.fiware.tmforum.mapping.annotations.AttributeSetter;
-import org.fiware.tmforum.mapping.annotations.AttributeType;
-import org.fiware.tmforum.mapping.annotations.MappingEnabled;
 
 /**
  * Example data

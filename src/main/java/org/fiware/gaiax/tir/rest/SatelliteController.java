@@ -16,10 +16,13 @@ import org.fiware.gaiax.satellite.model.AdherenceVO;
 import org.fiware.gaiax.satellite.model.CertificateVO;
 import org.fiware.gaiax.satellite.model.PartiesInfoVO;
 import org.fiware.gaiax.satellite.model.PartiesResponseVO;
+import org.fiware.gaiax.satellite.model.PartyInfoVO;
+import org.fiware.gaiax.satellite.model.PartyResponseVO;
 import org.fiware.gaiax.satellite.model.PartyVO;
 import org.fiware.gaiax.satellite.model.TokenResponseVO;
 import org.fiware.gaiax.satellite.model.TrustedListResponseVO;
 import org.fiware.gaiax.tir.auth.JWTService;
+import org.fiware.gaiax.tir.configuration.Party;
 import org.fiware.gaiax.tir.configuration.SatelliteProperties;
 import org.fiware.gaiax.tir.repository.PartiesRepo;
 
@@ -35,6 +38,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -62,18 +66,30 @@ public class SatelliteController implements SatelliteApi {
 
 	@Secured(SecurityRule.IS_AUTHENTICATED)
 	@Override
-	public HttpResponse<PartiesResponseVO> getParties() {
-		List<PartyVO> partyVOS = partiesRepo.getParties().stream().map(p -> {
+	public HttpResponse<PartiesResponseVO> getParties(String eori, String certificateSubjectName) {
+		Optional<String> optionalEori = Optional.ofNullable(eori);
+		Optional<String> optionalCSN = Optional.ofNullable(certificateSubjectName);
+		List<Party> partys = new ArrayList<>();
+		if (optionalEori.isPresent()) {
+			partiesRepo.getPartyById(optionalEori.get()).ifPresent(party -> partys.add(party));
+		} else {
+			partys.addAll(partiesRepo.getParties());
+		}
+		if (optionalCSN.isPresent()) {
+			List<Party> updatedParties = new ArrayList<>();
+			partys.stream().forEach(party -> {
+				var clientCert = JWTService.getCertificates(party.crt()).get(0);
+				if (clientCert.getSubjectX500Principal().getName().equals(optionalCSN.get())) {
+					updatedParties.add(party);
+				}
+			});
+			partys.clear();
+			partys.addAll(updatedParties);
+		}
 
-			// we need only the first one, the client
-			X509Certificate certificate = jwtService.getCertificates(p.crt()).get(0);
-
-			PartyVO partyVO = new PartyVO();
-			partyVO.partyId(p.id())
-					.partyName(p.name());
-			toCertificateVO(certificate).ifPresent(c -> partyVO.certificates(List.of(c)));
-			return partyVO;
-		}).collect(Collectors.toList());
+		List<PartyVO> partyVOS = partys.stream()
+				.map(this::partyToPartyVO)
+				.collect(Collectors.toList());
 
 		PartiesInfoVO partiesInfoVO = new PartiesInfoVO().data(partyVOS).count(partyVOS.size());
 
@@ -81,7 +97,35 @@ public class SatelliteController implements SatelliteApi {
 				createToken(securityService.getAuthentication().map(Principal::getName),
 						Optional.empty(),
 						Map.of(),
-						Map.of("parties_token", OBJECT_MAPPER.convertValue(partiesInfoVO, Map.class)))));
+						Map.of("parties_info", OBJECT_MAPPER.convertValue(partiesInfoVO, Map.class)))));
+	}
+
+	private PartyVO partyToPartyVO(Party party) {
+		// we need only the first one, the client
+		X509Certificate certificate = jwtService.getCertificates(party.crt()).get(0);
+
+		PartyVO partyVO = new PartyVO();
+		partyVO.partyId(party.id())
+				.partyName(party.name())
+				.adherence(new AdherenceVO().status("Active"));
+		toCertificateVO(certificate).ifPresent(c -> partyVO.certificates(List.of(c)));
+		return partyVO;
+	}
+
+	@Secured(SecurityRule.IS_AUTHENTICATED)
+	@Override
+	public HttpResponse<PartyResponseVO> getPartyById(String partyId) {
+		Optional<PartyVO> optionalParty = partiesRepo.getPartyById(partyId).map(this::partyToPartyVO);
+		if (optionalParty.isEmpty()) {
+			return HttpResponse.notFound();
+		}
+		PartyInfoVO partyInfoVO = new PartyInfoVO().partyInfo(optionalParty.get());
+
+		return HttpResponse.ok(new PartyResponseVO().partyToken(
+				createToken(securityService.getAuthentication().map(Principal::getName),
+						Optional.empty(),
+						Map.of(),
+						Map.of("parties_token", OBJECT_MAPPER.convertValue(partyInfoVO, Map.class)))));
 	}
 
 	private Optional<CertificateVO> toCertificateVO(X509Certificate certificate) {
@@ -114,6 +158,7 @@ public class SatelliteController implements SatelliteApi {
 					String.format("Assertion type needs to be %s.", ALLOWED_ASSERTION_TYPE));
 		}
 		if (partiesRepo.getPartyById(clientId).isEmpty()) {
+			log.debug("Known parties: {}.", partiesRepo.getParties().stream().map(Party::id).toList());
 			throw new IllegalArgumentException(String.format("Unknown client %s", clientId));
 		}
 		jwtService.validateJWT(clientAssertion);
