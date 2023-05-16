@@ -1,4 +1,4 @@
-package org.fiware.gaiax.common.exception;
+package org.fiware.gaiax.tir.exception;
 
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.http.HttpRequest;
@@ -7,6 +7,7 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.server.exceptions.ExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.fiware.gaiax.common.exception.ErrorDetails;
 
 import javax.inject.Singleton;
 import java.time.format.DateTimeParseException;

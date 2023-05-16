@@ -2,20 +2,14 @@ package org.fiware.gaiax.common.repository;
 
 import io.github.wistefan.mapping.EntityVOMapper;
 import io.github.wistefan.mapping.JavaObjectMapper;
-import io.micronaut.cache.annotation.CacheInvalidate;
-import io.micronaut.cache.annotation.CachePut;
 import io.micronaut.cache.annotation.Cacheable;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import lombok.RequiredArgsConstructor;
-import org.fiware.gaiax.common.caching.EntityIdKeyGenerator;
 import org.fiware.gaiax.common.configuration.GeneralProperties;
-import org.fiware.gaiax.common.exception.DeletionException;
-import org.fiware.gaiax.common.exception.DeletionExceptionReason;
 import org.fiware.gaiax.common.exception.NgsiLdRepositoryException;
 import org.fiware.gaiax.common.mapping.NGSIMapper;
 import org.fiware.ngsi.api.EntitiesApiClient;
-import org.fiware.ngsi.model.EntityFragmentVO;
 import org.fiware.ngsi.model.EntityVO;
 import reactor.core.publisher.Mono;
 
@@ -48,18 +42,6 @@ public abstract class NgsiLdBaseRepository {
     }
 
     /**
-     * Create an entity at the broker and cahce it.
-     *
-     * @param entityVO     - the entity to be created
-     * @param ngsiLDTenant - tenant the entity belongs to
-     * @return completable with the result
-     */
-    @CachePut(value = ENTITIES_CACHE_NAME, keyGenerator = EntityIdKeyGenerator.class)
-    public Mono<Void> createEntity(EntityVO entityVO, String ngsiLDTenant) {
-        return entitiesApi.createEntity(entityVO, ngsiLDTenant);
-    }
-
-    /**
      * Retrieve entity from the broker or from the cache if they are available there.
      *
      * @param entityId id of the entity
@@ -70,59 +52,9 @@ public abstract class NgsiLdBaseRepository {
         return asyncRetrieveEntityById(entityId, generalProperties.getTenant(), null, null, null, getLinkHeader());
     }
 
-    /**
-     * Patch an entity, using the "overwrite" option.
-     *
-     * @param entityId         id of the entity
-     * @param entityFragmentVO the entity elements to be updated
-     * @return an empty mono
-     */
-    @CacheInvalidate(value = ENTITIES_CACHE_NAME, keyGenerator = EntityIdKeyGenerator.class)
-    public Mono<Void> patchEntity(URI entityId, EntityFragmentVO entityFragmentVO) {
-        return entitiesApi.updateEntity(entityId, entityFragmentVO, generalProperties.getTenant(), null);
-    }
-
-    /**
-     * Create a domain entity
-     *
-     * @param domainEntity the entity to be created
-     * @param <T>          the type of the object
-     * @return an empty mono
-     */
-    public <T> Mono<Void> createDomainEntity(T domainEntity) {
-        return createEntity(javaObjectMapper.toEntityVO(domainEntity), generalProperties.getTenant());
-    }
-
-    /**
-     * Update a domain entity
-     *
-     * @param id           id of the entity to be updated
-     * @param domainEntity the entity to be created
-     * @param <T>          the type of the object
-     * @return an empty mono
-     */
-    public <T> Mono<Void> updateDomainEntity(String id, T domainEntity) {
-        return patchEntity(URI.create(id), ngsiMapper.map(javaObjectMapper.toEntityVO(domainEntity)));
-    }
-
-    /**
-     * Delete a domain entity
-     *
-     * @param id id of the entity to be deleted
-     * @return an empty mono
-     */
-    public Mono<Void> deleteDomainEntity(URI id) {
-        return entitiesApi
-                .removeEntityById(id, generalProperties.getTenant(), null)
-                .onErrorResume(t -> {
-                    if (t instanceof HttpClientResponseException e && e.getStatus().equals(HttpStatus.NOT_FOUND)) {
-                        throw new DeletionException(String.format("Was not able to delete %s, since it does not exist.", id),
-                                DeletionExceptionReason.NOT_FOUND);
-                    }
-                    throw new DeletionException(String.format("Was not able to delete %s.", id),
-                            t,
-                            DeletionExceptionReason.UNKNOWN);
-                });
+    public <T> Mono<T> get(URI id, Class<T> entityClass) {
+        return retrieveEntityById(id)
+                .flatMap(entityVO -> entityVOMapper.fromEntityVO(entityVO, entityClass));
     }
 
     /**
@@ -147,6 +79,29 @@ public abstract class NgsiLdBaseRepository {
         return entitiesApi
                 .retrieveEntityById(entityId, ngSILDTenant, attrs, type, options, link)
                 .onErrorResume(this::handleClientException);
+    }
+
+    public <T> Mono<List<T>> findEntities(Integer offset, Integer limit, String entityType, Class<T> entityClass) {
+        return entitiesApi.queryEntities(generalProperties.getTenant(),
+                        null,
+                        null,
+                        entityType,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        limit,
+                        offset,
+                        null,
+                        getLinkHeader())
+                .map(List::stream)
+                .flatMap(entityVOStream -> zipToList(entityVOStream, entityClass))
+                .onErrorResume(t -> {
+                    throw new NgsiLdRepositoryException("Was not able to list entities.", Optional.of(t));
+                });
     }
 
     private Mono<EntityVO> handleClientException(Throwable e) {
