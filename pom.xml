@@ -576,14 +576,14 @@
                             <tag>${project.version}</tag>
                         </tags>
                     </to>
-                    <extraDirectories>
+<!--                    <extraDirectories>
                         <paths>
                             <path>
                                 <from>LICENSE</from>
                                 <into>/licenses</into>
                             </path>
                         </paths>
-                    </extraDirectories>
+                    </extraDirectories>-->
                     <container>
                         <labels>
                             <!-- oci labels -->
