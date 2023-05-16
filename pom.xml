@@ -59,7 +59,7 @@
         <!-- docker -->
         <exec.mainClass>org.fiware.gaiax.wrapper.Application</exec.mainClass>
         <image.registry>quay.io</image.registry>
-        <image.repository>wi_stefan</image.repository>
+        <image.repository>pulledtim</image.repository>
 
         <!-- lazy dev -->
         <version.org.mapstruct>1.5.3.Final</version.org.mapstruct>
@@ -569,6 +569,14 @@
                             <tag>${project.version}</tag>
                         </tags>
                     </to>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>LICENSE</from>
+                                <into>/licenses</into>
+                            </path>
+                        </paths>
+                    </extraDirectories>
                     <container>
                         <labels>
                             <!-- oci labels -->
