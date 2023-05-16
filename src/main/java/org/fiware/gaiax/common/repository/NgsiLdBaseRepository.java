@@ -13,6 +13,7 @@ import org.fiware.ngsi.api.EntitiesApiClient;
 import org.fiware.ngsi.model.EntityVO;
 import reactor.core.publisher.Mono;
 
+import javax.inject.Singleton;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +24,8 @@ import java.util.stream.Stream;
  * Base-Repository implementation for using the NGSI-LD API as a storage backend. Supports caching and asynchronous retrieval of entities.
  */
 @RequiredArgsConstructor
-public abstract class NgsiLdBaseRepository {
+@Singleton
+public class NgsiLdBaseRepository {
 
     /**
      * Name for the entities cache
