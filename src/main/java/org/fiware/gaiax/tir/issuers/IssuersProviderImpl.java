@@ -2,7 +2,7 @@ package org.fiware.gaiax.tir.issuers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.fiware.tmforum.common.repository.TmForumRepository;
+import org.fiware.gaiax.common.repository.TmForumRepository;
 import reactor.core.publisher.Mono;
 
 import javax.inject.Singleton;

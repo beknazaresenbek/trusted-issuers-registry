@@ -1,10 +1,10 @@
 package org.fiware.gaiax.tir.issuers;
 
+import org.fiware.gaiax.common.mapping.IdHelper;
 import org.fiware.gaiax.tir.model.IssuerAttributeVO;
 import org.fiware.gaiax.tir.model.IssuerEntryVO;
 import org.fiware.gaiax.tir.model.IssuerVO;
 import org.fiware.gaiax.tir.model.IssuersResponseVO;
-import org.fiware.tmforum.common.mapping.IdHelper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
