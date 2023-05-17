@@ -9,8 +9,8 @@
         <version>3.7.2</version>
     </parent>
 
-    <groupId>org.fiware.gaiax</groupId>
-    <artifactId>trusted-issuer-registry-wrapper</artifactId>
+    <groupId>org.fiware.iam</groupId>
+    <artifactId>trusted-issuers-registry</artifactId>
     <version>0.0.1</version>
 
     <description>${project.description}</description>
@@ -37,14 +37,14 @@
         <!-- project info -->
         <project.author.name>Tim Smyth</project.author.name>
         <project.author.email>tim.smyth@fiware.org</project.author.email>
-        <project.description>EBSI TrustedIssuerRegistry API Impl with Context broker backend
+        <project.description>EBSI TrustedIssuersRegistry API Impl with Context broker backend
         </project.description>
-        <project.summary>EBSI TrustedIssuerRegistry API Impl with Context broker backend.</project.summary>
-        <project.url>https://github.com/pulledtim/trusted-issuer-registry-wrapper</project.url>
+        <project.summary>EBSI TrustedIssuersRegistry API Impl with Context broker backend.</project.summary>
+        <project.url>https://github.com/pulledtim/trusted-issuers-registry</project.url>
         <project.license.name>Apache License 2.0</project.license.name>
         <project.license.identifier>Apache License 2.0</project.license.identifier>
         <project.license.url>https://www.apache.org/licenses/LICENSE-2.0</project.license.url>
-        <project.title>FIWARE Trusted Issuer Registry Wrapper</project.title>
+        <project.title>FIWARE Trusted Issuers Registry</project.title>
         <project.vendor>FIWARE Foundation, e.V.</project.vendor>
         <project.contact.domain>fiware.org</project.contact.domain>
         <project.contact.email>tim.smyth@fiware.org</project.contact.email>
@@ -57,7 +57,7 @@
         <version.org.jacoco.maven-plugin>0.8.8</version.org.jacoco.maven-plugin>
 
         <!-- docker -->
-        <exec.mainClass>org.fiware.gaiax.wrapper.Application</exec.mainClass>
+        <exec.mainClass>org.fiware.iam.tir.Application</exec.mainClass>
         <image.registry>quay.io</image.registry>
         <image.repository>pulledtim</image.repository>
 
@@ -271,9 +271,9 @@
                         </goals>
                         <configuration>
                             <inputSpec>./api/trusted-issuers-registry.yaml</inputSpec>
-                            <apiPackage>org.fiware.gaiax.tir.api</apiPackage>
+                            <apiPackage>org.fiware.iam.tir.api</apiPackage>
                             <strictSpec>true</strictSpec>
-                            <modelPackage>org.fiware.gaiax.tir.model</modelPackage>
+                            <modelPackage>org.fiware.iam.tir.model</modelPackage>
                             <generateAliasAsModel>true</generateAliasAsModel>
                             <generateApiTests>true</generateApiTests>
                             <generateModelTests>false</generateModelTests>
@@ -305,9 +305,9 @@
                         </goals>
                         <configuration>
                             <inputSpec>./api/satellite.yaml</inputSpec>
-                            <apiPackage>org.fiware.gaiax.satellite.api</apiPackage>
+                            <apiPackage>org.fiware.iam.satellite.api</apiPackage>
                             <strictSpec>true</strictSpec>
-                            <modelPackage>org.fiware.gaiax.satellite.model</modelPackage>
+                            <modelPackage>org.fiware.iam.satellite.model</modelPackage>
                             <generateAliasAsModel>true</generateAliasAsModel>
                             <generateApiTests>true</generateApiTests>
                             <generateModelTests>false</generateModelTests>
@@ -462,7 +462,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>org.fiware.gaiax.tir.Application</mainClass>
+                            <mainClass>org.fiware.iam.tir.Application</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
