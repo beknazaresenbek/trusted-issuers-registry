@@ -1,5 +1,6 @@
 package org.fiware.gaiax.common.repository;
 
+import io.github.wistefan.mapping.EntitiesRepository;
 import io.github.wistefan.mapping.EntityVOMapper;
 import io.github.wistefan.mapping.JavaObjectMapper;
 import io.micronaut.cache.annotation.Cacheable;
@@ -24,8 +25,7 @@ import java.util.stream.Stream;
  * Base-Repository implementation for using the NGSI-LD API as a storage backend. Supports caching and asynchronous retrieval of entities.
  */
 @RequiredArgsConstructor
-@Singleton
-public class NgsiLdBaseRepository {
+public abstract class NgsiLdBaseRepository{
 
     /**
      * Name for the entities cache

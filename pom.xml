@@ -87,12 +87,7 @@
         </dependency>
 
 
-        <!-- NGSI LD Cconnector -->
-<!--        <dependency>-->
-<!--            <groupId>org.fiware.tmforum</groupId>-->
-<!--            <artifactId>common</artifactId>-->
-<!--            <version>0.1</version>-->
-<!--        </dependency>-->
+        <!-- NGSI LD Connector -->
         <dependency>
             <groupId>io.github.wistefan</groupId>
             <artifactId>ngsi-ld-java-mapping</artifactId>
