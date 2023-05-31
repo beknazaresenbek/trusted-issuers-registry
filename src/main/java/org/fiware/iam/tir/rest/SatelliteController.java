@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.security.annotation.Secured;
@@ -66,7 +67,7 @@ public class SatelliteController implements SatelliteApi {
 
 	@Secured(SecurityRule.IS_AUTHENTICATED)
 	@Override
-	public HttpResponse<PartiesResponseVO> getParties(String eori, String certificateSubjectName) {
+	public HttpResponse<PartiesResponseVO> getParties(@Nullable String eori, @Nullable String certificateSubjectName) {
 		Optional<String> optionalEori = Optional.ofNullable(eori);
 		Optional<String> optionalCSN = Optional.ofNullable(certificateSubjectName);
 		List<Party> partys = new ArrayList<>();
@@ -145,8 +146,8 @@ public class SatelliteController implements SatelliteApi {
 
 	@Secured({ SecurityRule.IS_ANONYMOUS })
 	@Override
-	public HttpResponse<TokenResponseVO> getToken(String grantType, String clientId, String scope,
-			String clientAssertionType, String clientAssertion) {
+	public HttpResponse<TokenResponseVO> getToken(@Nullable String grantType, @Nullable String clientId, @Nullable String scope,
+												  @Nullable String clientAssertionType, @Nullable String clientAssertion) {
 		if (!grantType.equals(ALLOWED_GRANT_TYPE)) {
 			throw new IllegalArgumentException(String.format("Grant_type needs to be %s.", ALLOWED_GRANT_TYPE));
 		}

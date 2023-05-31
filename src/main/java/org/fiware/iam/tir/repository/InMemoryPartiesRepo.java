@@ -119,7 +119,7 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 		satelliteProperties.getTrustedList().stream()
 				.forEach(trustedCA -> {
 					toTrustedCaVO(JWTService.getCertificates(trustedCA.crt()).get(0)).ifPresent(
-							tCA -> trustedCAVOS.add(tCA));
+							trustedCAVOS::add);
 				});
 
 		return trustedCAVOS;

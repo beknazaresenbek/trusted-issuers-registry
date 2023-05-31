@@ -35,7 +35,7 @@ jobs:
         run: echo "::set-output name=version::$(echo ${VERSION})"
 
   # image build&push
-  tir-wrapper:
+  tir:
     needs: [ "generate-version" ]
     runs-on: ubuntu-latest
 
@@ -56,7 +56,7 @@ jobs:
           mvn clean install deploy -DskipTests -DskipITs -Dimage.tag=${{ needs.generate-version.outputs.version }} -Dimage.registry="${{ env.REGISTRY }}" -Dimage.repository="${{ env.REPOSITORY }}"
 
   git-release:
-    needs: ["generate-version", "tir-wrapper"]
+    needs: ["generate-version", "tir"]
 
     runs-on: ubuntu-latest
 
