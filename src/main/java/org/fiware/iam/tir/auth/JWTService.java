@@ -21,6 +21,8 @@ import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -151,6 +153,27 @@ public class JWTService {
                 })
                 .map(certBytes -> Base64.getEncoder().encodeToString(certBytes)).toList();
 
+    }
+
+    public PrivateKey getPrivateKey(String key) {
+        java.security.Security.addProvider(
+                new org.bouncycastle.jce.provider.BouncyCastleProvider()
+        );
+
+        String privateKeyPEM = key
+                .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                .replaceAll(System.lineSeparator(), "")
+                .replace("-----END RSA PRIVATE KEY-----", "");
+
+        byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
+
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+            return keyFactory.generatePrivate(keySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

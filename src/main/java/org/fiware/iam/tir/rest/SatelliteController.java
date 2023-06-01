@@ -64,6 +64,7 @@ public class SatelliteController implements SatelliteApi {
 	private final JWTService jwtService;
 	private final SatelliteProperties satelliteProperties;
 	private final SecurityService securityService;
+	private final IShareMapper mapper;
 
 	@Secured(SecurityRule.IS_AUTHENTICATED)
 	@Override
@@ -89,7 +90,7 @@ public class SatelliteController implements SatelliteApi {
 		}
 
 		List<PartyVO> partyVOS = partys.stream()
-				.map(this::partyToPartyVO)
+				.map(mapper::partyToPartyVO)
 				.collect(Collectors.toList());
 
 		PartiesInfoVO partiesInfoVO = new PartiesInfoVO().data(partyVOS).count(partyVOS.size());
@@ -101,22 +102,10 @@ public class SatelliteController implements SatelliteApi {
 						Map.of("parties_info", OBJECT_MAPPER.convertValue(partiesInfoVO, Map.class)))));
 	}
 
-	private PartyVO partyToPartyVO(Party party) {
-		// we need only the first one, the client
-		X509Certificate certificate = jwtService.getCertificates(party.crt()).get(0);
-
-		PartyVO partyVO = new PartyVO();
-		partyVO.partyId(party.id())
-				.partyName(party.name())
-				.adherence(new AdherenceVO().status("Active"));
-		toCertificateVO(certificate).ifPresent(c -> partyVO.certificates(List.of(c)));
-		return partyVO;
-	}
-
 	@Secured(SecurityRule.IS_AUTHENTICATED)
 	@Override
 	public HttpResponse<PartyResponseVO> getPartyById(String partyId) {
-		Optional<PartyVO> optionalParty = partiesRepo.getPartyById(partyId).map(this::partyToPartyVO);
+		Optional<PartyVO> optionalParty = partiesRepo.getPartyById(partyId).map(mapper::partyToPartyVO);
 		if (optionalParty.isEmpty()) {
 			return HttpResponse.notFound();
 		}
@@ -127,21 +116,6 @@ public class SatelliteController implements SatelliteApi {
 						Optional.empty(),
 						Map.of(),
 						Map.of("parties_token", OBJECT_MAPPER.convertValue(partyInfoVO, Map.class)))));
-	}
-
-	private Optional<CertificateVO> toCertificateVO(X509Certificate certificate) {
-		try {
-
-			return Optional.of(new CertificateVO()
-					.certificateType(certificate.getType())
-					.enabledFrom(certificate.getNotBefore().toString())
-					.subjectName(certificate.getSubjectX500Principal().getName())
-					.x5c(Base64.getEncoder().encodeToString(certificate.getEncoded()))
-					.x5tHashS256(JWTService.getThumbprint(certificate)));
-		} catch (CertificateEncodingException e) {
-			log.warn("Was not able to encode cert.", e);
-			return Optional.empty();
-		}
 	}
 
 	@Secured({ SecurityRule.IS_ANONYMOUS })
@@ -185,7 +159,7 @@ public class SatelliteController implements SatelliteApi {
 		Map<String, Object> header = Map.of("x5c", jwtService.getPemChain(satelliteProperties.getCertificate()));
 
 		Algorithm signingAlgo = Algorithm.RSA256(
-				(RSAPrivateKey) getPrivateKey(satelliteProperties.getKey()));
+				(RSAPrivateKey) jwtService.getPrivateKey(satelliteProperties.getKey()));
 
 		JWTCreator.Builder jwtBuilder = JWT.create()
 				.withAudience(satelliteProperties.getId())
@@ -212,25 +186,5 @@ public class SatelliteController implements SatelliteApi {
 
 	}
 
-	private static PrivateKey getPrivateKey(String key) {
-		java.security.Security.addProvider(
-				new org.bouncycastle.jce.provider.BouncyCastleProvider()
-		);
-
-		String privateKeyPEM = key
-				.replace("-----BEGIN RSA PRIVATE KEY-----", "")
-				.replaceAll(System.lineSeparator(), "")
-				.replace("-----END RSA PRIVATE KEY-----", "");
-
-		byte[] encoded = Base64.getDecoder().decode(privateKeyPEM);
-
-		try {
-			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-			PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-			return keyFactory.generatePrivate(keySpec);
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 }

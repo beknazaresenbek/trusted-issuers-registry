@@ -38,6 +38,14 @@ public class TrustedIssuersRegistry implements TirApi {
                 .orElseGet(HttpResponse::notFound);
     }
 
+    /**
+     * Currently not possible to implement pagination since we only have an implicit order guarantee for the ngsi
+     * backend. Therefore we would have to cache everything in this service.
+     *
+     * @param pageSize
+     * @param pageAfter
+     * @return
+     */
     @Override
     public HttpResponse<IssuersResponseVO> getIssuers(@Nullable @Min(1) @Max(100) Integer pageSize, @Nullable String pageAfter) {
         return HttpResponse.ok(mapper.map(issuersProvider

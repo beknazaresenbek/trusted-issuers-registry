@@ -75,7 +75,7 @@ public class InMemoryPartiesRepo implements PartiesRepo {
                     return;
                 }
                 updatedParties.add(
-                        new Party(didDocument.getId(), didDocument.getId(), didDocument.getId(), "active", certificate.get()));
+                        new Party(didDocument.getId(), didDocument.getId(), didDocument.getId(), "Active", certificate.get()));
 
             } catch (IllegalArgumentException e) {
                 log.warn("Cannot resolve issuer {}, skip.", ti.getIssuer());
