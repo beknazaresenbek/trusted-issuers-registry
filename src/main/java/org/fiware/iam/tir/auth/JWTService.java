@@ -79,7 +79,9 @@ public class JWTService {
         if (certs.size() != 3) {
             throw new IllegalArgumentException("Did not receive a full x5c chain.");
         }
+        
         validateCertificateChain(certs);
+
         String clientCert = certs.get(0);
         String caCert = certs.get(2);
         PublicKey publicKey = getPublicKey(clientCert);
