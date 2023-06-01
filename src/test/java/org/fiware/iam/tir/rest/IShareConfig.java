@@ -30,10 +30,10 @@ public class IShareConfig {
     private List<Party> parties;
 
 
-    List<X509Certificate> getCertificateChain(){
+    public List<X509Certificate> getCertificateChain(){
         return getCertificates(certificate);
     }
-    List<String> getEncodedCertificateChain() {
+    public List<String> getEncodedCertificateChain() {
         return getCertificateChain().stream().map(cert -> {
             try {
                 return Base64.getEncoder().encodeToString(cert.getEncoded());
@@ -44,11 +44,11 @@ public class IShareConfig {
     }
 
     @SneakyThrows
-    RSAPublicKey getPublicKey(){
+    public RSAPublicKey getPublicKey(){
        return (RSAPublicKey) getCertificateChain().get(0).getPublicKey();
     }
     @SneakyThrows
-    RSAPrivateKey getPrivateKey(){
+    public RSAPrivateKey getPrivateKey(){
         java.security.Security.addProvider(
                 new org.bouncycastle.jce.provider.BouncyCastleProvider()
         );

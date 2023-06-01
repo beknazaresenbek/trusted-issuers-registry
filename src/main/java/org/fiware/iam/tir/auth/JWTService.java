@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.micronaut.context.exceptions.BeanInstantiationException;
 import jakarta.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,24 +16,60 @@ import org.fiware.iam.tir.repository.PartiesRepo;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
-import java.security.MessageDigest;
-import java.security.PublicKey;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.*;
+import java.security.cert.Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 
 @Slf4j
-@RequiredArgsConstructor
 @Singleton
 public class JWTService {
 
     private final PartiesRepo partiesRepo;
     private final SatelliteProperties satelliteProperties;
+
+    private final CertificateFactory certificateFactory;
+
+    public JWTService(PartiesRepo partiesRepo, SatelliteProperties satelliteProperties) {
+        this.partiesRepo = partiesRepo;
+        this.satelliteProperties = satelliteProperties;
+        try {
+            certificateFactory = CertificateFactory.getInstance("X.509");
+        }catch (CertificateException e){
+            throw new BeanInstantiationException("Error setting up the certificate factory",e);
+        }
+    }
+
+    private void validateCertificateChain(List<String> certificates) {
+        try {
+            List<Certificate> mappedCertificates = certificates
+                    .stream()
+                    .map(this::mapCertificate)
+                    .collect(Collectors.toList());
+            List<? extends Certificate> certificateChain = certificateFactory.generateCertPath(mappedCertificates).getCertificates();
+            certificateChain.get(0).verify(certificateChain.get(1).getPublicKey());
+            certificateChain.get(1).verify(certificateChain.get(2).getPublicKey());
+        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException | NoSuchProviderException |
+                 SignatureException e) {
+            throw new IllegalArgumentException("Certificate chain could not be validated", e);
+        }
+    }
+
+    private Certificate mapCertificate(String cert) {
+        try {
+            String extendedCertString = "-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----".formatted(cert);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(extendedCertString.getBytes(StandardCharsets.UTF_8));
+            return certificateFactory.generateCertificate(inputStream);
+        } catch (CertificateException e) {
+            throw new IllegalArgumentException("Could not validate certificate: %s".formatted(cert), e);
+        }
+    }
 
     public DecodedJWT validateJWT(String jwtString) {
         DecodedJWT decodedJWT = JWT.decode(jwtString);
@@ -40,6 +77,7 @@ public class JWTService {
         if (certs.size() != 3) {
             throw new IllegalArgumentException("Did not receive a full x5c chain.");
         }
+        validateCertificateChain(certs);
         String clientCert = certs.get(0);
         String caCert = certs.get(2);
         PublicKey publicKey = getPublicKey(clientCert);
@@ -66,12 +104,10 @@ public class JWTService {
         return decodedJWT;
     }
 
-    public static PublicKey getPublicKey(String pemBlock) {
-
+    public PublicKey getPublicKey(String pemBlock) {
         byte[] keyBytes = Base64.getDecoder().decode(pemBlock);
         try {
-            CertificateFactory fact = CertificateFactory.getInstance("X.509");
-            X509Certificate cer = (X509Certificate) fact.generateCertificate(new ByteArrayInputStream(keyBytes));
+            X509Certificate cer = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(keyBytes));
             return cer.getPublicKey();
         } catch (CertificateException e) {
             log.warn("Was not able to parse the key", e);

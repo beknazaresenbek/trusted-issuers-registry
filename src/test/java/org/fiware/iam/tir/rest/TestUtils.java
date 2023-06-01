@@ -1,8 +1,12 @@
 package org.fiware.iam.tir.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.exceptions.HttpClientResponseException;
+import lombok.SneakyThrows;
 
+import java.io.File;
 import java.util.concurrent.Callable;
 
 public abstract class TestUtils {
@@ -15,12 +19,9 @@ public abstract class TestUtils {
                 .replace("-----END RSA PRIVATE KEY-----", "");
     }
 
-    // Helper method to catch potential http exceptions and return the status code.
-    public static <T> HttpResponse<T> callAndCatch(Callable<HttpResponse<T>> request) throws Exception {
-        try {
-            return request.call();
-        } catch (HttpClientResponseException e) {
-            return (HttpResponse<T>) e.getResponse();
-        }
+    @SneakyThrows
+    public static IShareConfig readConfig(String name) {
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        return mapper.readValue(new File("src/test/resources/clients/" + name), IShareConfig.class);
     }
 }

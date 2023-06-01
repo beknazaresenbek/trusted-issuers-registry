@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.fiware.iam.tir.rest.TestUtils.readConfig;
 import static org.fiware.iam.tir.rest.TestUtils.strip;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -226,11 +227,7 @@ public class SatelliteControllerIT extends NGSIBasedTest implements SatelliteApi
                 .isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
-    @SneakyThrows
-    private IShareConfig readConfig(String name) {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        return mapper.readValue(new File("src/test/resources/clients/" + name), IShareConfig.class);
-    }
+
 
     @SneakyThrows
     private ApplicationConfig readConfigOfApplication() {

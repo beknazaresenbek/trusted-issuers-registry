@@ -13,7 +13,7 @@ import org.fiware.iam.common.exception.ErrorDetails;
 import javax.inject.Singleton;
 
 /**
- * Handler to catch and log all unexpected exceptions and translate them into a proper 500 response.
+ * Handler to catch and log all unexpected exceptions and translate them into a proper response.
  */
 @Produces
 @Singleton
