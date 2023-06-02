@@ -544,8 +544,8 @@
                     <!-- exclude generated code -->
                     <excludes>
                         <exclude>org/fiware/ngsi/**/*</exclude>
-                        <exclude>org/fiware/*/api/*</exclude>
-                        <exclude>org/fiware/*/model/*</exclude>
+                        <exclude>org/fiware/**/api/*</exclude>
+                        <exclude>org/fiware/**/model/*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
