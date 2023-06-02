@@ -4,6 +4,7 @@ import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.fiware.iam.satellite.model.TrustedCAVO;
+import org.fiware.iam.tir.auth.CertificateMapper;
 import org.fiware.iam.tir.auth.JWTService;
 import org.fiware.iam.tir.configuration.Party;
 import org.fiware.iam.tir.configuration.SatelliteProperties;
@@ -24,14 +25,15 @@ public class InMemoryPartiesRepo implements PartiesRepo {
     private final SatelliteProperties satelliteProperties;
     private final IssuersProvider issuersProvider;
     private final List<Party> parties;
-
     private final DidService didService;
+    private final CertificateMapper certificateMapper;
 
-    public InMemoryPartiesRepo(SatelliteProperties satelliteProperties, IssuersProvider issuersProvider, DidService didService) {
+    public InMemoryPartiesRepo(SatelliteProperties satelliteProperties, IssuersProvider issuersProvider, DidService didService, CertificateMapper certificateMapper) {
         this.parties = satelliteProperties.getParties();
         this.satelliteProperties = satelliteProperties;
         this.issuersProvider = issuersProvider;
         this.didService = didService;
+        this.certificateMapper = certificateMapper;
     }
 
     private Optional<TrustedCAVO> toTrustedCaVO(X509Certificate caCert) {
@@ -39,7 +41,7 @@ public class InMemoryPartiesRepo implements PartiesRepo {
         try {
             String subject = caCert.getSubjectX500Principal().toString();
             String validity = isValid(caCert);
-            String fingerprint = JWTService.getThumbprint(caCert);
+            String fingerprint = certificateMapper.getThumbprint(caCert);
             return Optional.of(new TrustedCAVO().status("granted").certificateFingerprint(fingerprint)
                     .validity(validity).subject(subject));
         } catch (CertificateEncodingException e) {
@@ -97,7 +99,7 @@ public class InMemoryPartiesRepo implements PartiesRepo {
 
         satelliteProperties.getTrustedList().stream()
                 .forEach(trustedCA -> {
-                    toTrustedCaVO(JWTService.getCertificates(trustedCA.crt()).get(0)).ifPresent(
+                    toTrustedCaVO(certificateMapper.getCertificates(trustedCA.crt()).get(0)).ifPresent(
                             trustedCAVOS::add);
                 });
 

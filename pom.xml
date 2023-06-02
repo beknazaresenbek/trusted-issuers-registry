@@ -49,8 +49,17 @@
         <project.contact.domain>fiware.org</project.contact.domain>
         <project.contact.email>tim.smyth@fiware.org</project.contact.email>
 
-
+        <!-- div -->
         <version.io.kokuwa.micronaut.logging>3.0.4</version.io.kokuwa.micronaut.logging>
+        <ngsi-ld-java-mapping.version>0.1.2</ngsi-ld-java-mapping.version>
+        <commons-codec.version>1.15</commons-codec.version>
+        <logback-classic.version>1.2.3</logback-classic.version>
+        <javax.inject.version>1</javax.inject.version>
+        <findbugs.annotations.version>3.0.1u2</findbugs.annotations.version>
+        <jaxb-api.version>2.3.1</jaxb-api.version>
+        <java-jwt.version>4.4.0</java-jwt.version>
+        <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
+        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
 
         <!-- Test -->
         <version.io.kokuwa.maven.k3s-plugin>0.7.0</version.io.kokuwa.maven.k3s-plugin>
@@ -70,6 +79,8 @@
         <!-- code gen -->
         <version.org.openapitools.generator-maven-plugin>6.1.0</version.org.openapitools.generator-maven-plugin>
         <version.io.kokuwa.micronaut.codegen>3.2.2</version.io.kokuwa.micronaut.codegen>
+
+
     </properties>
 
     <dependencies>
@@ -83,8 +94,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
-            <version>
-                ${version.org.mapstruct}</version>
+            <version>${version.org.mapstruct}</version>
         </dependency>
 
 
@@ -92,12 +102,12 @@
         <dependency>
             <groupId>io.github.wistefan</groupId>
             <artifactId>ngsi-ld-java-mapping</artifactId>
-            <version>0.1.2</version>
+            <version>${ngsi-ld-java-mapping.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.15</version>
+            <version>${commons-codec.version}</version>
         </dependency>
         <!-- micronaut -->
         <dependency>
@@ -131,7 +141,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
+            <version>${logback-classic.version}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -203,7 +213,7 @@
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-            <version>1</version>
+            <version>${javax.inject.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -213,7 +223,7 @@
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
-            <version>3.0.1u2</version>
+            <version>${findbugs.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -223,23 +233,23 @@
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>2.3.1</version>
+            <version>${jaxb-api.version}</version>
         </dependency>
         <!-- JWT -->
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>4.4.0</version>
+            <version>${java-jwt.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.31</version>
+            <version>${nimbus-jose-jwt.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.70</version>
+            <version>${bcprov-jdk15on.version}</version>
         </dependency>
 
         <!-- Tests -->
@@ -535,8 +545,6 @@
                         <exclude>org/fiware/ngsi/**/*</exclude>
                         <exclude>org/fiware/*/api/*</exclude>
                         <exclude>org/fiware/*/model/*</exclude>
-                        <!-- needs to be excluded, breaks coveralls linking -->
-                        <exclude>**/TMForumMapperImpl*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -630,7 +638,9 @@
                     <!-- this is very important to avoid classpath conflicts between the micronaut-test-context and the beans present inside the shaded-jar -->
                     <classesDirectory>${project.build.outputDirectory}</classesDirectory>
                     <failIfNoTests>true</failIfNoTests>
-                    <argLine>${failsafe.jacoco.args} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.time=ALL-UNNAMED</argLine>
+                    <argLine>${failsafe.jacoco.args} --add-opens java.base/java.lang=ALL-UNNAMED --add-opens
+                        java.base/java.time=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -646,14 +656,14 @@
                             <tag>${project.version}</tag>
                         </tags>
                     </to>
-<!--                    <extraDirectories>
-                        <paths>
-                            <path>
-                                <from>LICENSE</from>
-                                <into>/licenses</into>
-                            </path>
-                        </paths>
-                    </extraDirectories>-->
+                    <!--                    <extraDirectories>
+                                            <paths>
+                                                <path>
+                                                    <from>LICENSE</from>
+                                                    <into>/licenses</into>
+                                                </path>
+                                            </paths>
+                                        </extraDirectories>-->
                     <container>
                         <labels>
                             <!-- oci labels -->

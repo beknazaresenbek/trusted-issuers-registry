@@ -3,6 +3,7 @@ package org.fiware.iam.tir.rest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.fiware.iam.tir.auth.CertificateMapper;
 import org.fiware.iam.tir.configuration.Party;
 
 import java.security.KeyFactory;
@@ -15,7 +16,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.fiware.iam.tir.auth.JWTService.getCertificates;
 import static org.fiware.iam.tir.rest.TestUtils.strip;
 
 @Data
@@ -30,9 +30,10 @@ public class IShareConfig {
     private List<Party> parties;
 
 
-    public List<X509Certificate> getCertificateChain(){
-        return getCertificates(certificate);
+    public List<X509Certificate> getCertificateChain() {
+        return new CertificateMapper().getCertificates(certificate);
     }
+
     public List<String> getEncodedCertificateChain() {
         return getCertificateChain().stream().map(cert -> {
             try {
@@ -44,11 +45,12 @@ public class IShareConfig {
     }
 
     @SneakyThrows
-    public RSAPublicKey getPublicKey(){
-       return (RSAPublicKey) getCertificateChain().get(0).getPublicKey();
+    public RSAPublicKey getPublicKey() {
+        return (RSAPublicKey) getCertificateChain().get(0).getPublicKey();
     }
+
     @SneakyThrows
-    public RSAPrivateKey getPrivateKey(){
+    public RSAPrivateKey getPrivateKey() {
         java.security.Security.addProvider(
                 new org.bouncycastle.jce.provider.BouncyCastleProvider()
         );

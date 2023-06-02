@@ -23,6 +23,10 @@ public class DidService {
 
     private final HttpClient httpClient;
 
+    /**
+     * @param did
+     * @return Return the mapped did.json that was referenced by the input did
+     */
     public Optional<DidDocument> retrieveDidDocument(String did) {
         String documentPath = getDIDDocumentPath(did);
         HttpResponse<DidDocument> res = httpClient.toBlocking()
@@ -30,6 +34,10 @@ public class DidService {
         return Optional.ofNullable(res).filter(response -> response.status() == HttpStatus.OK).map(HttpResponse::body);
     }
 
+    /**
+     * @param didDocument The did document holding possible verification methods
+     * @return Base64 Encoded X.509 certificate if one was referenced in the verification methods
+     */
     public Optional<String> getCertificate(DidDocument didDocument) {
         try {
             return Optional

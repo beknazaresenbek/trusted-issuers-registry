@@ -13,8 +13,6 @@ import io.micronaut.security.utils.SecurityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fiware.iam.satellite.api.SatelliteApi;
-import org.fiware.iam.satellite.model.AdherenceVO;
-import org.fiware.iam.satellite.model.CertificateVO;
 import org.fiware.iam.satellite.model.PartiesInfoVO;
 import org.fiware.iam.satellite.model.PartiesResponseVO;
 import org.fiware.iam.satellite.model.PartyInfoVO;
@@ -22,26 +20,19 @@ import org.fiware.iam.satellite.model.PartyResponseVO;
 import org.fiware.iam.satellite.model.PartyVO;
 import org.fiware.iam.satellite.model.TokenResponseVO;
 import org.fiware.iam.satellite.model.TrustedListResponseVO;
+import org.fiware.iam.tir.auth.CertificateMapper;
 import org.fiware.iam.tir.auth.JWTService;
 import org.fiware.iam.tir.configuration.Party;
 import org.fiware.iam.tir.configuration.SatelliteProperties;
 import org.fiware.iam.tir.repository.PartiesRepo;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
-import java.security.PrivateKey;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,6 +56,7 @@ public class SatelliteController implements SatelliteApi {
 	private final SatelliteProperties satelliteProperties;
 	private final SecurityService securityService;
 	private final IShareMapper mapper;
+	private final CertificateMapper certificateMapper;
 
 	@Secured(SecurityRule.IS_AUTHENTICATED)
 	@Override
@@ -80,7 +72,7 @@ public class SatelliteController implements SatelliteApi {
 		if (optionalCSN.isPresent()) {
 			List<Party> updatedParties = new ArrayList<>();
 			partys.stream().forEach(party -> {
-				var clientCert = JWTService.getCertificates(party.crt()).get(0);
+				var clientCert = certificateMapper.getCertificates(party.crt()).get(0);
 				if (clientCert.getSubjectX500Principal().getName().equals(optionalCSN.get())) {
 					updatedParties.add(party);
 				}
@@ -156,10 +148,10 @@ public class SatelliteController implements SatelliteApi {
 
 	private String createToken(Optional<String> aud, Optional<String> clientId, Map<String, List<?>>
 			additionalClaims, Map<String, Map> mapClaim) {
-		Map<String, Object> header = Map.of("x5c", jwtService.getPemChain(satelliteProperties.getCertificate()));
+		Map<String, Object> header = Map.of("x5c", certificateMapper.getCertificatesWithoutHeaders(satelliteProperties.getCertificate()));
 
 		Algorithm signingAlgo = Algorithm.RSA256(
-				(RSAPrivateKey) jwtService.getPrivateKey(satelliteProperties.getKey()));
+				(RSAPrivateKey) certificateMapper.getPrivateKey(satelliteProperties.getKey()));
 
 		JWTCreator.Builder jwtBuilder = JWT.create()
 				.withAudience(satelliteProperties.getId())
