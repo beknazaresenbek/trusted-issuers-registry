@@ -543,9 +543,12 @@
                 <configuration>
                     <!-- exclude generated code -->
                     <excludes>
-                        <exclude>org/fiware/ngsi/**/*</exclude>
                         <exclude>org/fiware/**/api/*</exclude>
                         <exclude>org/fiware/**/model/*</exclude>
+                        <!-- needs to be excluded, breaks coveralls linking -->
+                        <exclude>**/TrustedIssuerMapperImpl*</exclude>
+                        <exclude>**/NGSIMapperImpl*</exclude>
+
                     </excludes>
                 </configuration>
                 <executions>
