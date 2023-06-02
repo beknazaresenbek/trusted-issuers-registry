@@ -28,3 +28,8 @@ jobs:
         id: test
         run: |
           mvn clean test integration-test
+
+      - name: Submit report
+        id: coveralls
+        run: |
+          mvn jacoco:merge jacoco:report coveralls:report -Dcoveralls.token=${{ secrets.COVERALLS_TOKEN }} -Preport-coveralls
