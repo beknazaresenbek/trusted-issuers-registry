@@ -5,8 +5,8 @@ The Trusted Issuers Registry provides both an [EBSI Trusted Issuers Registry](ht
 [![FIWARE Security](https://nexus.lab.fiware.org/repository/raw/public/badges/chapters/security.svg)](https://www.fiware.org/developers/catalogue/)
 [![License badge](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Coverage Status](https://coveralls.io/repos/github/fiware/trusted-issuers-registry/badge.svg?branch=main)](https://coveralls.io/github/fiware/trusted-issuers-registry?branch=main)
-[![Test](https://github.com/fiware/trusted-issuers-registry/actions/workflows/test.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-list/actions/workflows/test.yml)
-[![Release](https://github.com/fiware/trusted-issuers-registry/actions/workflows/release.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-list/actions/workflows/release.yml)
+[![Test](https://github.com/fiware/trusted-issuers-registry/actions/workflows/test.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/test.yml)
+[![Release](https://github.com/fiware/trusted-issuers-registry/actions/workflows/release.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/release.yml)
 
 ## Installation
 ### Container
