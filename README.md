@@ -8,11 +8,6 @@ The Trusted Issuers Registry provides both an [EBSI Trusted Issuers Registry](ht
 [![Test](https://github.com/pulledtim/trusted-issuers-registry/actions/workflows/test.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-list/actions/workflows/test.yml)
 [![Release](https://github.com/pulledtim/trusted-issuers-registry/actions/workflows/release.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-list/actions/workflows/release.yml)
 
-
-## Background
-Implementation of the [TIR](https://api-pilot.ebsi.eu/docs/apis/trusted-issuers-registry/v4#/) backed by NGSI-LD Context Broker
-
-
 ## Installation
 ### Container
 
