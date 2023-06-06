@@ -40,6 +40,6 @@ The following table concentrates on the most important configuration parameters:
 
 ## License
 
-Trusted-Issuers-List is licensed under the Apache License, Version 2.0. See LICENSE for the full license text.
+Trusted Issuers Registry is licensed under the Apache License, Version 2.0. See LICENSE for the full license text.
 
 © 2023 FIWARE Foundation e.V.
