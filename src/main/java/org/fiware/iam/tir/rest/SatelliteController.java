@@ -106,9 +106,7 @@ public class SatelliteController implements SatelliteApi {
 				createToken(securityService.getAuthentication().map(Principal::getName),
 						Optional.empty(),
 						Map.of(),
-						Map.of("parties_token", OBJECT_MAPPER.convertValue(partyInfoVO, Map.class))));
-		log.debug("Party info is {}", partyInfoVO);
-		log.debug("Respond {}", prv);
+						OBJECT_MAPPER.convertValue(partyInfoVO, Map.class)));
 
 		return HttpResponse.ok(prv);
 	}
