@@ -28,7 +28,7 @@ public class InMemoryPartiesRepo implements PartiesRepo {
     private final CertificateMapper certificateMapper;
 
     public InMemoryPartiesRepo(SatelliteProperties satelliteProperties, IssuersProvider issuersProvider, DidService didService, CertificateMapper certificateMapper) {
-        this.parties = satelliteProperties.getParties();
+        this.parties = new ArrayList<>(satelliteProperties.getParties());
         this.satelliteProperties = satelliteProperties;
         this.issuersProvider = issuersProvider;
         this.didService = didService;
