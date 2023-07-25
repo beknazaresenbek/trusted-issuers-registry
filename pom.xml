@@ -596,6 +596,7 @@
                         <!-- needs to be excluded, breaks coveralls linking -->
                         <exclude>**/TrustedIssuerMapperImpl*</exclude>
                         <exclude>**/NGSIMapperImpl*</exclude>
+                        <exclude>changeMe/*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
