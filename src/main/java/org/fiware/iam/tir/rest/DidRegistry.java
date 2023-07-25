@@ -11,7 +11,6 @@ import org.fiware.iam.did.api.DidApi;
 import org.fiware.iam.did.model.DIDDocumentVO;
 import org.fiware.iam.tir.configuration.Party;
 import org.fiware.iam.tir.repository.DidDocumentMapper;
-import org.fiware.iam.tir.repository.DidService;
 import org.fiware.iam.tir.repository.PartiesRepo;
 
 import java.time.LocalDate;
@@ -32,6 +31,7 @@ public class DidRegistry implements DidApi {
 
     /**
      * Gets the DID document corresponding to the DID.
+     *
      * @param did The DID of the entity in question
      * @return The DID Document if the DID belongs to a trusted participant
      */
@@ -44,8 +44,8 @@ public class DidRegistry implements DidApi {
                 .orElse(HttpResponse.notFound());
     }
 
-    private Optional<DIDDocumentVO> retrieveDidDocumentOfTrustedParticipant(Party trustedParty){
-        return Optional.ofNullable(trustedParty.didDocument()).or(()->didDocumentMapper.map(trustedParty));
+    private Optional<DIDDocumentVO> retrieveDidDocumentOfTrustedParticipant(Party trustedParty) {
+        return Optional.ofNullable(trustedParty.didDocument()).or(() -> didDocumentMapper.map(trustedParty));
     }
 
 
