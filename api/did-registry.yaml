@@ -14,6 +14,7 @@ paths:
         - DID
       parameters:
         - $ref: '#/components/parameters/Did'
+        - $ref: '#/components/parameters/ValidAt'
       operationId: getDIDDocument
       description: Gets the DID document corresponding to the DID.
       summary: Gets the DID document corresponding to the DID.

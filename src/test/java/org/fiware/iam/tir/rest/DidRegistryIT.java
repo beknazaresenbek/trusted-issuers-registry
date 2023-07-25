@@ -60,7 +60,7 @@ public class DidRegistryIT extends NGSIBasedTest implements DidApiTestSpec {
 
         createIssuer(new TrustedIssuer("did:web:someId").setIssuer("did:web:someDid"));
         partyRepo.updateParties();
-        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument("did:web:someDid");
+        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument("did:web:someDid",null);
         assertEquals(HttpStatus.OK, answer.getStatus());
 
         assertEquals(toJson(SOME_DID_DOCUMENT), toJson(answer.getBody().get()));
@@ -75,14 +75,14 @@ public class DidRegistryIT extends NGSIBasedTest implements DidApiTestSpec {
     @Disabled("Test client verifies the parameter already")
     @Override
     public void getDIDDocument400() throws Exception {
-        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument(null);
+        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument(null,null);
         assertEquals(HttpStatus.BAD_REQUEST, answer.getStatus());
     }
 
     @Test
     @Override
     public void getDIDDocument404() throws Exception {
-        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument("did:ebsi:unknown");
+        HttpResponse<DIDDocumentVO> answer = apiClient.getDIDDocument("did:ebsi:unknown",null);
         assertEquals(HttpStatus.NOT_FOUND, answer.getStatus());
     }
 

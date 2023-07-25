@@ -1,5 +1,6 @@
 package org.fiware.iam.tir.rest;
 
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.security.annotation.Secured;
@@ -13,6 +14,7 @@ import org.fiware.iam.tir.repository.DidDocumentMapper;
 import org.fiware.iam.tir.repository.DidService;
 import org.fiware.iam.tir.repository.PartiesRepo;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
@@ -34,16 +36,17 @@ public class DidRegistry implements DidApi {
      * @return The DID Document if the DID belongs to a trusted participant
      */
     @Override
-    public HttpResponse<DIDDocumentVO> getDIDDocument(String did) {
-         return partiesRepo
-                 .getPartyByDID(did)
-                 .flatMap(this::retrieveDidDocumentOfTrustedParticipant)
-                 .map(HttpResponse::ok)
-                 .orElse(HttpResponse.notFound());
-
+    public HttpResponse<DIDDocumentVO> getDIDDocument(String did, @Nullable LocalDate validAt) {
+        return partiesRepo
+                .getPartyByDID(did)
+                .flatMap(this::retrieveDidDocumentOfTrustedParticipant)
+                .map(HttpResponse::ok)
+                .orElse(HttpResponse.notFound());
     }
 
     private Optional<DIDDocumentVO> retrieveDidDocumentOfTrustedParticipant(Party trustedParty){
         return Optional.ofNullable(trustedParty.didDocument()).or(()->didDocumentMapper.map(trustedParty));
     }
+
+
 }
