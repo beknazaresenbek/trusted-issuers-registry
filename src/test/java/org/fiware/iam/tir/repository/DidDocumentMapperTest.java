@@ -58,7 +58,7 @@ class DidDocumentMapperTest {
 
         assertThat(rsaVerification.getId()).isEqualTo("id");
 
-        JWKVO publicKey = rsaVerification.getPublicKeyJWK();
+        JWKVO publicKey = rsaVerification.getPublicKeyJwk();
         assertThat(publicKey.getN()).isEqualTo("mnxf1jmdE1vq5GZzA/qOVNHE60T5rbj1j5Q6c6XPyCZpAxv7G5w0kPZLHUfw9dOBZe9DtPm5gF9eLxHYoYkSrnNdGYqWD2u4samt9/T0mqJtv3/g/Fhe2EcFET5LoKLOqk0Q9U4aF75HKaMKkJSbKgoi5dvm2RRXi/bCBdTgm7t1I/E2Oa/ONu7t0wDNmvLO4BE1cHP3PZ2oZB5ikBMKx4IfD8mDWu/ne5LeFO93UEApidSpTn/Im/IhcyXRaZq8pHqC3/yWVL4e9uqjl6R7CkKIU2wVk4eTbQcnj1o0Ptd48WQKpiZnggu9fzzlBYaYUBCOGDzaQ0prjni9/aDcVQ==");
         assertThat(publicKey.getE()).isEqualTo("AQAB");
     }

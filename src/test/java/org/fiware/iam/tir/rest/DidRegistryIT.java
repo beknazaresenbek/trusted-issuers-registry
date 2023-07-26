@@ -43,7 +43,7 @@ public class DidRegistryIT extends NGSIBasedTest implements DidApiTestSpec {
 
     private static final DIDDocumentVO SOME_DID_DOCUMENT = new DIDDocumentVO()
             .id("did:web:someDid")
-            .addVerificationMethodItem(new JsonWebKey2020VerificationMethodVO().id("did:web:someDid").publicKeyJWK(new JWKVO().x5u("example.com/cert")));
+            .addVerificationMethodItem(new JsonWebKey2020VerificationMethodVO().id("did:web:someDid").publicKeyJwk(new JWKVO().x5u("example.com/cert")));
 
     public DidRegistryIT(EntitiesApiClient entitiesApiClient, JavaObjectMapper javaObjectMapper, ObjectMapper objectMapper, GeneralProperties generalProperties, DidApiTestClient apiClient, InMemoryPartiesRepo partyRepo, DidService didService) {
         super(entitiesApiClient, javaObjectMapper, objectMapper, generalProperties);

@@ -121,7 +121,7 @@ components:
           properties:
             controller:
               type: string
-            publicKeyJWK:
+            publicKeyJwk:
               $ref: '#/components/schemas/JWK'
     JsonWebKey2020VerificationMethod:
       type: object
@@ -131,7 +131,7 @@ components:
           properties:
             controller:
               type: string
-            publicKeyJWK:
+            publicKeyJwk:
               $ref: '#/components/schemas/JWK'
     JWK:
       type: object

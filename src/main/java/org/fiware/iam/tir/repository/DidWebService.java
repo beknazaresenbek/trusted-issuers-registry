@@ -49,7 +49,7 @@ public class DidWebService implements DidService {
                     // Todo handle other types
                     .filter(e-> e instanceof JsonWebKey2020VerificationMethodVO)
                     .map(e-> (JsonWebKey2020VerificationMethodVO)e)
-                    .map(JsonWebKey2020VerificationMethodVO::getPublicKeyJWK)
+                    .map(JsonWebKey2020VerificationMethodVO::getPublicKeyJwk)
                     .filter(Objects::nonNull)
                     .map(JWKVO::getX5u)
                     .filter(Objects::nonNull)

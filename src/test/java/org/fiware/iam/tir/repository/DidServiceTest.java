@@ -75,10 +75,10 @@ public class DidServiceTest {
     @ParameterizedTest
     @MethodSource("certificates")
     void getCertificate(DIDDocumentVO didDocument, String expectedUrl, boolean errorExpected, boolean resultExpected) {
-        if (expectedUrl != null) {
+        if(expectedUrl!= null){
             when(blockingHttpClient.retrieve(expectedUrl)).thenReturn("certificate");
-        } else {
-            when(blockingHttpClient.retrieve(anyString())).thenThrow(new HttpClientResponseException("Fail", HttpResponse.notFound()));
+        }else{
+            when(blockingHttpClient.retrieve(anyString())).thenThrow(new HttpClientResponseException("Fail",HttpResponse.notFound()));
         }
         try {
             Optional<String> certificate = classUnderTest.getCertificate(didDocument);
@@ -86,8 +86,8 @@ public class DidServiceTest {
             if (errorExpected) {
                 fail("Should have caused error");
             }
-        } catch (Exception e) {
-            if (!errorExpected) {
+        }catch (Exception e){
+            if(!errorExpected){
                 throw e;
             }
         }
@@ -95,11 +95,11 @@ public class DidServiceTest {
 
     private static Stream<Arguments> certificates() {
         List<Arguments> testCases = new ArrayList<>();
-        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJWK(new JWKVO().x5u("https://something.com/cert.crt")))), "https://something.com/cert.crt", false, true));
+        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO().x5u("https://something.com/cert.crt")))), "https://something.com/cert.crt", false, true));
         testCases.add(Arguments.of(new DIDDocumentVO(), "", false, false));
         testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO())), "", false, false));
-        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJWK(new JWKVO()))), "", false, false));
-        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJWK(new JWKVO().x5u("https://something.com/cert.crt")))), null, true, false));
+        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO()))), "", false, false));
+        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO().x5u("https://something.com/cert.crt")))), null, true, false));
         return testCases.stream();
     }
 

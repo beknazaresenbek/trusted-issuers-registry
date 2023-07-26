@@ -42,6 +42,6 @@ public class DidDocumentMapper {
                         .addVerificationMethodItem(new RsaVerificationKey2018VerificationMethodVO()
                                 .id(did)
                                 .controller(did)
-                                .publicKeyJWK(jwk)));
+                                .publicKeyJwk(jwk)));
     }
 }
