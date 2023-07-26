@@ -79,7 +79,8 @@ public class InMemoryPartiesRepo implements PartiesRepo {
                     return;
                 }
                 Party party = new Party(didDocument.getId(), didDocument.getId(), didDocument.getId(), "Active", certificate.get(), didDocument);
-                log.debug("Adding party {}", party);
+                log.debug("Adding party {}", party.id());
+                log.trace("Adding party {}", party);
                 updatedParties.add(party);
             } catch (RuntimeException e) {
                 log.warn("Cannot resolve issuer {}, skip.", ti.getIssuer(), e);

@@ -46,7 +46,6 @@ public class DidServiceTest {
         when(httpClient.toBlocking()).thenReturn(blockingHttpClient);
     }
 
-
     @ParameterizedTest
     @MethodSource("didDocuments")
     void retrieveDidDocument(String did, String expectedUri, boolean errorExpected) {
@@ -76,10 +75,10 @@ public class DidServiceTest {
     @ParameterizedTest
     @MethodSource("certificates")
     void getCertificate(DIDDocumentVO didDocument, String expectedUrl, boolean errorExpected, boolean resultExpected) {
-        if(expectedUrl!= null){
+        if (expectedUrl != null) {
             when(blockingHttpClient.retrieve(expectedUrl)).thenReturn("certificate");
-        }else{
-            when(blockingHttpClient.retrieve(anyString())).thenThrow(new HttpClientResponseException("Fail",HttpResponse.notFound()));
+        } else {
+            when(blockingHttpClient.retrieve(anyString())).thenThrow(new HttpClientResponseException("Fail", HttpResponse.notFound()));
         }
         try {
             Optional<String> certificate = classUnderTest.getCertificate(didDocument);
@@ -87,8 +86,8 @@ public class DidServiceTest {
             if (errorExpected) {
                 fail("Should have caused error");
             }
-        }catch (Exception e){
-            if(!errorExpected){
+        } catch (Exception e) {
+            if (!errorExpected) {
                 throw e;
             }
         }

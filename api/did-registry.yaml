@@ -148,6 +148,10 @@ components:
           type: string
         x5u:
           type: string
+        x5c:
+          type: array
+          items:
+            type: string
         use:
           type: string
     ProblemDetails:
