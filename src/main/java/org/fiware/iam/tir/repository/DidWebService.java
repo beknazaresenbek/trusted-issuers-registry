@@ -1,19 +1,20 @@
 package org.fiware.iam.tir.repository;
 
+import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.exceptions.HttpClientException;
 import lombok.RequiredArgsConstructor;
 import org.fiware.iam.did.model.DIDDocumentVO;
-import org.fiware.iam.did.model.JWKVO;
+import org.fiware.iam.did.model.DIDDocumentVerificationMethodInnerVO;
 import org.fiware.iam.did.model.JsonWebKey2020VerificationMethodVO;
+import org.fiware.iam.did.model.RsaVerificationKey2018VerificationMethodVO;
 
 import javax.inject.Singleton;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -41,22 +42,42 @@ public class DidWebService implements DidService {
      */
     @Override
     public Optional<String> getCertificate(DIDDocumentVO didDocument) {
+        return Optional
+                .ofNullable(didDocument.getVerificationMethod())
+                .orElseGet(ArrayList::new)
+                .stream()
+                .map(this::retrieveCertificate)
+                .flatMap(Optional::stream)
+                .findFirst();
+    }
+
+    private Optional<String> retrieveCertificate(DIDDocumentVerificationMethodInnerVO verificationMethodVO) {
+        return Optional.of(verificationMethodVO).map(method -> {
+                    if (verificationMethodVO instanceof JsonWebKey2020VerificationMethodVO) {
+                        return ((JsonWebKey2020VerificationMethodVO) verificationMethodVO).getPublicKeyJwk();
+                    } else if (verificationMethodVO instanceof RsaVerificationKey2018VerificationMethodVO) {
+                        return ((RsaVerificationKey2018VerificationMethodVO) verificationMethodVO).getPublicKeyJwk();
+                    } else {
+                        throw new IllegalArgumentException("Verification method type %s not supported.".formatted(verificationMethodVO.getType()));
+                    }
+                })
+                .map(publicKeyJwk -> {
+                    //TODO create cert string from other fields (eg n&e)
+                    if (StringUtils.isNotEmpty(publicKeyJwk.getX5u())) {
+                        return downloadCertificate(publicKeyJwk.getX5u());
+                    } else if (publicKeyJwk.getX5c() != null && publicKeyJwk.getX5c().size() > 0) {
+                        return downloadCertificate(publicKeyJwk.getX5c().get(0));
+                    } else {
+                        throw new IllegalArgumentException("Could not retrieve certificate for controller %s and public key JWK %s".formatted(verificationMethodVO.getType(), publicKeyJwk));
+                    }
+                });
+    }
+
+    private String downloadCertificate(String certificateAddress) {
         try {
-            return Optional
-                    .ofNullable(didDocument.getVerificationMethod())
-                    .orElseGet(ArrayList::new)
-                    .stream()
-                    // Todo handle other types
-                    .filter(e-> e instanceof JsonWebKey2020VerificationMethodVO)
-                    .map(e-> (JsonWebKey2020VerificationMethodVO)e)
-                    .map(JsonWebKey2020VerificationMethodVO::getPublicKeyJwk)
-                    .filter(Objects::nonNull)
-                    .map(JWKVO::getX5u)
-                    .filter(Objects::nonNull)
-                    .map(certificateAddress -> httpClient.toBlocking().retrieve(certificateAddress))
-                    .findFirst();
+            return httpClient.toBlocking().retrieve(certificateAddress);
         } catch (HttpClientException e) {
-            throw new IllegalArgumentException("Could not retrieve certificate for did %s".formatted(didDocument.getId()), e);
+            throw new IllegalArgumentException("Could not retrieve certificate from %s".formatted(certificateAddress), e);
         }
     }
 

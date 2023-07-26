@@ -97,8 +97,8 @@ public class DidServiceTest {
         List<Arguments> testCases = new ArrayList<>();
         testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO().x5u("https://something.com/cert.crt")))), "https://something.com/cert.crt", false, true));
         testCases.add(Arguments.of(new DIDDocumentVO(), "", false, false));
-        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO())), "", false, false));
-        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO()))), "", false, false));
+        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO())), "", true, false));
+        testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO()))), "", true, false));
         testCases.add(Arguments.of(new DIDDocumentVO().verificationMethod(List.of(new JsonWebKey2020VerificationMethodVO().publicKeyJwk(new JWKVO().x5u("https://something.com/cert.crt")))), null, true, false));
         return testCases.stream();
     }
