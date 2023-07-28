@@ -39,6 +39,8 @@ public class DidDocumentMapper {
                         .kty(e.getAlgorithm()))
                 .map(jwk -> new DIDDocumentVO()
                         .id(did)
+                        .addAtContextItem("https://www.w3.org/2018/credentials/v1")
+                        .addAtContextItem("https://www.w3.org/ns/did/v1")
                         .addVerificationMethodItem(new RsaVerificationKey2018VerificationMethodVO()
                                 .id(did)
                                 .controller(did)
