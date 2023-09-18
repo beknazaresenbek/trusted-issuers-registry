@@ -3,9 +3,10 @@
 The Trusted Issuers Registry provides both an [EBSI Trusted Issuers Registry](https://api-pilot.ebsi.eu/docs/apis/trusted-issuers-registry/v4#/) implementation and an iShare implementation. The service provides data from an NGSI-LD compliant backend and configuration files.
 
 [![FIWARE Security](https://nexus.lab.fiware.org/repository/raw/public/badges/chapters/security.svg)](https://www.fiware.org/developers/catalogue/)
-[![License badge](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License badge](https://img.shields.io/github/license/fiware/trusted-issuers-list.svg)](https://opensource.org/licenses/Apache-2.0)<br>
+[![Container Repository on Quay](https://img.shields.io/badge/quay.io-fiware%2Ftrusted--issuers--registry-grey?logo=red%20hat&labelColor=EE0000 "Container Repository on Quay")](https://quay.io/repository/fiware/trusted-issuers-registry)
 [![Coverage Status](https://coveralls.io/repos/github/fiware/trusted-issuers-registry/badge.svg?branch=main)](https://coveralls.io/github/fiware/trusted-issuers-registry?branch=main)
-[![Test](https://github.com/fiware/trusted-issuers-registry/actions/workflows/test.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/test.yml)
+[![Test](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/test.yaml/badge.svg)](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/test.yaml)
 [![Release](https://github.com/fiware/trusted-issuers-registry/actions/workflows/release.yml/badge.svg)](https://github.com/FIWARE/trusted-issuers-registry/actions/workflows/release.yml)
 
 ## Installation
